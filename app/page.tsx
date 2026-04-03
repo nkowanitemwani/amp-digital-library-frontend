@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
-// ─── scroll-reveal hook ───────────────────────────────────────
 function useInView(threshold = 0.1) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -20,297 +19,177 @@ function useInView(threshold = 0.1) {
   return { ref, visible };
 }
 
-// ─── fake library UI data ─────────────────────────────────────
-const DEMO_CATEGORIES = [
-  { name: "Mathematics", count: 12, color: "#DBEAFE", dot: "#3B82F6" },
-  { name: "Science",     count: 8,  color: "#DCFCE7", dot: "#22C55E" },
-  { name: "English",     count: 15, color: "#FEF9C3", dot: "#EAB308" },
-  { name: "History",     count: 6,  color: "#FFE4E6", dot: "#F43F5E" },
-];
-
-const DEMO_BOOKS = [
-  { title: "Algebra — Unit 3",     unit: 3,  status: "ready",      time: "18 min" },
-  { title: "Algebra — Unit 4",     unit: 4,  status: "ready",      time: "22 min" },
-  { title: "Geometry — Unit 1",    unit: 1,  status: "processing", time: "—" },
-  { title: "Calculus — Unit 1",    unit: 1,  status: "ready",      time: "31 min" },
-];
-
 export default function LandingPage() {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 60);
+    return () => clearTimeout(t);
+  }, []);
 
   const s1 = useInView();
   const s2 = useInView();
   const s3 = useInView();
   const s4 = useInView();
+  const s5 = useInView();
 
   return (
-    <div style={{ fontFamily: "'DM Sans', 'Inter', system-ui, sans-serif", color: "#0A0A0A", background: "#FAFAFA", overflowX: "hidden" }}>
-
+    <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif", color: "#0A0A0A", background: "#FAFAFA", overflowX: "hidden" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap');
-
         * { box-sizing: border-box; }
 
-        /* ── mesh gradient background ── */
         .mesh-hero {
           background:
-            radial-gradient(ellipse 80% 50% at 20% -10%, rgba(219,234,254,0.7) 0%, transparent 60%),
-            radial-gradient(ellipse 60% 40% at 80% 10%,  rgba(254,226,160,0.5) 0%, transparent 55%),
-            radial-gradient(ellipse 50% 60% at 50% 120%, rgba(220,252,231,0.4) 0%, transparent 60%),
-            #FAFAFA;
+            radial-gradient(ellipse 90% 60% at 10% 0%,   rgba(254,243,199,0.95) 0%, transparent 55%),
+            radial-gradient(ellipse 70% 50% at 90% 20%,  rgba(219,234,254,0.80) 0%, transparent 55%),
+            radial-gradient(ellipse 60% 70% at 50% 110%, rgba(220,252,231,0.50) 0%, transparent 55%),
+            #FFFBF5;
         }
-
-        .mesh-features {
+        .mesh-how {
           background:
-            radial-gradient(ellipse 70% 50% at 90% 50%, rgba(219,234,254,0.5) 0%, transparent 60%),
-            radial-gradient(ellipse 60% 40% at 10% 60%,  rgba(254,215,170,0.4) 0%, transparent 60%),
+            radial-gradient(ellipse 80% 50% at 0%   50%, rgba(219,234,254,0.5) 0%, transparent 55%),
+            radial-gradient(ellipse 60% 40% at 100% 50%, rgba(254,243,199,0.5) 0%, transparent 55%),
             #FFFFFF;
         }
-
-        .mesh-cta {
-          background:
-            radial-gradient(ellipse 80% 60% at 50% 0%,   rgba(29,78,216,1) 0%, rgba(15,23,42,1) 70%),
-            #0F172A;
-        }
-
-        /* ── floating card shadow ── */
-        .float-card {
-          background: #fff;
-          border-radius: 16px;
-          border: 1px solid rgba(0,0,0,0.07);
-          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 20px 60px -10px rgba(0,0,0,0.12);
-        }
-
-        /* ── browser chrome mockup ── */
-        .browser-chrome {
-          background: #F1F5F9;
-          border-radius: 14px 14px 0 0;
-          padding: 10px 14px;
-          display: flex;
-          align-items: center;
-          gap: 6px;
+        .nav {
+          position: sticky; top: 0; z-index: 50;
+          background: rgba(255,251,245,0.88);
+          backdrop-filter: blur(14px);
           border-bottom: 1px solid rgba(0,0,0,0.06);
         }
-        .chrome-dot { width: 10px; height: 10px; border-radius: 50%; }
-        .chrome-bar { flex: 1; height: 20px; background: #E2E8F0; border-radius: 6px; margin: 0 8px; }
-
-        /* ── pill badge ── */
-        .pill {
-          display: inline-flex; align-items: center; gap: 6px;
-          background: rgba(255,255,255,0.9);
-          border: 1px solid rgba(0,0,0,0.08);
-          border-radius: 100px;
-          padding: 6px 14px;
-          font-size: 12px; font-weight: 500;
-          backdrop-filter: blur(8px);
-          box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        .browser {
+          background: #fff; border-radius: 16px;
+          border: 1px solid rgba(0,0,0,0.07);
+          box-shadow: 0 4px 6px rgba(0,0,0,0.04), 0 24px 64px rgba(0,0,0,0.10);
+          overflow: hidden;
         }
-        .pill-dot { width: 7px; height: 7px; border-radius: 50%; background: #22C55E; }
-
-        /* ── reveal animation ── */
+        .chrome { background: #F1F5F9; padding: 10px 14px; display: flex; align-items: center; gap: 5px; border-bottom: 1px solid rgba(0,0,0,0.06); }
+        .cdot { width: 9px; height: 9px; border-radius: 50%; }
+        .cbar { flex: 1; height: 18px; background: #E2E8F0; border-radius: 5px; margin: 0 8px; }
+        .pill { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.08); border-radius: 100px; padding: 6px 16px; font-size: 12px; font-weight: 500; box-shadow: 0 1px 4px rgba(0,0,0,0.06); backdrop-filter: blur(8px); }
+        .pbar { height: 5px; background: #E2E8F0; border-radius: 3px; overflow: hidden; }
+        .pfill { height: 100%; background: linear-gradient(90deg, #D97706, #F59E0B); border-radius: 3px; }
+        .step-card { background: #fff; border-radius: 20px; border: 1px solid rgba(0,0,0,0.06); padding: 32px 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .step-card:hover { transform: translateY(-4px); box-shadow: 0 8px 32px rgba(0,0,0,0.10); }
         .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.65s ease, transform 0.65s ease; }
         .reveal.in { opacity: 1; transform: translateY(0); }
-        .d1 { transition-delay: 0.08s; }
-        .d2 { transition-delay: 0.18s; }
-        .d3 { transition-delay: 0.28s; }
-        .d4 { transition-delay: 0.38s; }
-
-        /* ── hero entrance ── */
-        .hero-in { opacity: 0; transform: translateY(20px); transition: opacity 0.8s ease, transform 0.8s ease; }
-        .hero-in.mounted { opacity: 1; transform: translateY(0); }
-        .hi-1 { transition-delay: 0.05s; }
-        .hi-2 { transition-delay: 0.18s; }
-        .hi-3 { transition-delay: 0.32s; }
-        .hi-4 { transition-delay: 0.46s; }
-        .hi-5 { transition-delay: 0.60s; }
-
-        /* ── nav ── */
-        .nav { position: sticky; top: 0; z-index: 50; background: rgba(250,250,250,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.06); }
-
-        /* ── section label ── */
-        .sec-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: #EA580C; margin-bottom: 12px; }
-
-        /* ── feature row ── */
-        .feature-row { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; padding: 80px 0; border-top: 1px solid rgba(0,0,0,0.06); }
-        .feature-row.flip { direction: rtl; }
-        .feature-row.flip > * { direction: ltr; }
-
+        .d1 { transition-delay: 0.06s; } .d2 { transition-delay: 0.16s; } .d3 { transition-delay: 0.26s; } .d4 { transition-delay: 0.36s; }
+        .hero-in { opacity: 0; transform: translateY(22px); transition: opacity 0.8s ease, transform 0.8s ease; }
+        .hero-in.on { opacity: 1; transform: translateY(0); }
+        .hi1 { transition-delay: 0.05s; } .hi2 { transition-delay: 0.18s; } .hi3 { transition-delay: 0.32s; } .hi4 { transition-delay: 0.46s; } .hi5 { transition-delay: 0.60s; }
+        .quote-card { border-left: 4px solid #D97706; padding: 20px 24px; background: #FFFBF5; border-radius: 0 12px 12px 0; }
+        .badge-r { background: #D1FAE5; color: #065F46; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 6px; }
+        .badge-p { background: #FEF3C7; color: #92400E; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 6px; }
         @media (max-width: 768px) {
-          .feature-row { grid-template-columns: 1fr; gap: 32px; }
-          .feature-row.flip { direction: ltr; }
-          .hero-mockup { display: none !important; }
+          .two-col { grid-template-columns: 1fr !important; }
+          .three-col { grid-template-columns: 1fr !important; }
+          .hero-app { display: none !important; }
         }
-
-        /* ── audio player bar ── */
-        .player-bar {
-          height: 4px; background: #E2E8F0; border-radius: 2px; overflow: hidden;
-        }
-        .player-fill { height: 100%; background: linear-gradient(90deg, #1D4ED8, #60A5FA); border-radius: 2px; }
-
-        /* ── status badge ── */
-        .badge-ready { background: #DCFCE7; color: #15803D; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 6px; }
-        .badge-proc  { background: #FEF9C3; color: #854D0E; font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 6px; }
       `}</style>
 
-      {/* ══════════════════════════════════════════════════
-          NAV
-      ══════════════════════════════════════════════════ */}
+      {/* NAV */}
       <nav className="nav">
-        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "14px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, fontWeight: 400, letterSpacing: "-0.02em" }}>
-            Amp<span style={{ color: "#1D4ED8" }}>.</span>
-          </span>
-          <div style={{ display: "flex", alignItems: "center", gap: 28, fontSize: 14, color: "#64748B", fontWeight: 500 }}>
-            <a href="#features" style={{ textDecoration: "none", color: "inherit" }}>Features</a>
-            <a href="#how"      style={{ textDecoration: "none", color: "inherit" }}>How it works</a>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "14px 28px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Link href="/" style={{ textDecoration: "none" }}>
+            <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#0A0A0A" }}>
+              Amp<span style={{ color: "#D97706" }}>.</span>
+            </span>
+          </Link>
+          <div style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 14, color: "#64748B", fontWeight: 500 }}>
+            <a href="#how"     style={{ textDecoration: "none", color: "inherit" }}>How it works</a>
+            <a href="#mission" style={{ textDecoration: "none", color: "inherit" }}>Our mission</a>
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <Link href="/login"    style={{ fontSize: 13, fontWeight: 600, color: "#0A0A0A", textDecoration: "none", padding: "8px 16px" }}>Sign in</Link>
-            <Link href="/register" style={{ fontSize: 13, fontWeight: 600, color: "#fff", background: "#0A0A0A", borderRadius: 10, padding: "9px 20px", textDecoration: "none", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }}>Get started →</Link>
+            <Link href="/register" style={{ fontSize: 13, fontWeight: 700, color: "#fff", background: "#D97706", borderRadius: 10, padding: "9px 20px", textDecoration: "none", boxShadow: "0 2px 10px rgba(217,119,6,0.35)" }}>
+              Register your school
+            </Link>
           </div>
         </div>
       </nav>
 
-      {/* ══════════════════════════════════════════════════
-          HERO
-      ══════════════════════════════════════════════════ */}
-      <section className="mesh-hero" style={{ padding: "100px 32px 80px", textAlign: "center", position: "relative" }}>
-        <div style={{ maxWidth: 760, margin: "0 auto", position: "relative", zIndex: 1 }}>
-
-          {/* eyebrow pill */}
-          <div className={`hero-in hi-1 ${mounted ? "mounted" : ""}`} style={{ marginBottom: 28 }}>
+      {/* HERO */}
+      <section className="mesh-hero" style={{ padding: "96px 28px 80px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div className={`hero-in hi1 ${mounted ? "on" : ""}`} style={{ marginBottom: 28, textAlign: "center" }}>
             <span className="pill">
-              <span className="pill-dot" />
-              Now available for all schools
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#D97706", display: "inline-block" }} />
+              Accessibility tool for visually impaired primary school students
             </span>
           </div>
-
-          {/* Headline */}
           <h1
-            className={`hero-in hi-2 ${mounted ? "mounted" : ""}`}
-            style={{
-              fontFamily: "'DM Serif Display', serif",
-              fontSize: "clamp(3rem, 7vw, 5.5rem)",
-              fontWeight: 400,
-              lineHeight: 1.08,
-              letterSpacing: "-0.03em",
-              marginBottom: 24,
-              color: "#0A0A0A",
-            }}
+            className={`hero-in hi2 ${mounted ? "on" : ""}`}
+            style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(2.8rem, 6.5vw, 5.2rem)", fontWeight: 400, lineHeight: 1.07, letterSpacing: "-0.03em", textAlign: "center", maxWidth: 820, margin: "0 auto 24px" }}
           >
-            Your school library,
-            <br />
-            <em style={{ color: "#1D4ED8", fontStyle: "italic" }}>heard out loud.</em>
+            Every child deserves to<br />
+            <em style={{ color: "#D97706" }}>hear their lessons.</em>
           </h1>
-
-          {/* Sub */}
           <p
-            className={`hero-in hi-3 ${mounted ? "mounted" : ""}`}
-            style={{ fontSize: 18, color: "#64748B", lineHeight: 1.7, maxWidth: 520, margin: "0 auto 36px", fontWeight: 400 }}
+            className={`hero-in hi3 ${mounted ? "on" : ""}`}
+            style={{ fontSize: 18, color: "#64748B", lineHeight: 1.75, maxWidth: 560, margin: "0 auto 36px", textAlign: "center" }}
           >
-            Upload any PDF textbook. Amp converts it to audio automatically.
-            Students browse by category, pick a unit, and press play.
+            Amp converts school textbooks into audio for visually impaired
+            primary school students. Teachers upload a PDF — students listen.
+            No reading required.
           </p>
-
-          {/* CTAs */}
-          <div className={`hero-in hi-4 ${mounted ? "mounted" : ""}`} style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 64 }}>
-            <Link
-              href="/register"
-              style={{
-                fontSize: 15, fontWeight: 700, color: "#fff",
-                background: "#1D4ED8", borderRadius: 12, padding: "14px 32px",
-                textDecoration: "none",
-                boxShadow: "0 4px 24px rgba(29,78,216,0.35)",
-                display: "inline-flex", alignItems: "center", gap: 8,
-              }}
-            >
+          <div className={`hero-in hi4 ${mounted ? "on" : ""}`} style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 72 }}>
+            <Link href="/register" style={{ fontSize: 15, fontWeight: 700, color: "#fff", background: "#D97706", borderRadius: 12, padding: "15px 36px", textDecoration: "none", boxShadow: "0 6px 24px rgba(217,119,6,0.35)" }}>
               Register your school — free
             </Link>
-            <Link
-              href="/login"
-              style={{
-                fontSize: 15, fontWeight: 600, color: "#0A0A0A",
-                background: "#fff", borderRadius: 12, padding: "14px 28px",
-                textDecoration: "none", border: "1px solid rgba(0,0,0,0.1)",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-              }}
-            >
+            <Link href="/login" style={{ fontSize: 15, fontWeight: 600, color: "#0A0A0A", background: "#fff", borderRadius: 12, padding: "15px 28px", textDecoration: "none", border: "1px solid rgba(0,0,0,0.1)", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               Sign in to your library
             </Link>
           </div>
 
-          {/* ── Hero mockup — browser chrome wrapping the library UI ── */}
-          <div
-            className={`hero-in hi-5 ${mounted ? "mounted" : ""} float-card`}
-            style={{ borderRadius: 16, overflow: "hidden", textAlign: "left", maxWidth: 780, margin: "0 auto" }}
-          >
-            {/* Browser chrome */}
-            <div className="browser-chrome">
-              <div className="chrome-dot" style={{ background: "#FC615D" }} />
-              <div className="chrome-dot" style={{ background: "#FDBC40" }} />
-              <div className="chrome-dot" style={{ background: "#34CA49" }} />
-              <div className="chrome-bar" />
-              <span style={{ fontSize: 11, color: "#94A3B8", whiteSpace: "nowrap" }}>amp.library / dashboard</span>
+          {/* Hero mockup */}
+          <div className={`hero-in hi5 ${mounted ? "on" : ""} browser hero-app`} style={{ maxWidth: 820, margin: "0 auto" }}>
+            <div className="chrome">
+              <div className="cdot" style={{ background: "#FC615D" }} />
+              <div className="cdot" style={{ background: "#FDBC40" }} />
+              <div className="cdot" style={{ background: "#34CA49" }} />
+              <div className="cbar" />
+              <span style={{ fontSize: 10, color: "#94A3B8" }}>amp.library / mathematics</span>
             </div>
-
-            {/* App UI inside browser */}
-            <div style={{ background: "#F8FAFC", padding: 20, display: "grid", gridTemplateColumns: "200px 1fr", gap: 16, minHeight: 320 }}>
-
-              {/* Sidebar */}
-              <div style={{ background: "#fff", borderRadius: 12, border: "1px solid rgba(0,0,0,0.06)", padding: 16 }}>
-                <p style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 12 }}>Categories</p>
-                {DEMO_CATEGORIES.map(c => (
-                  <div key={c.name} style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    padding: "8px 10px", borderRadius: 8,
-                    background: c.name === "Mathematics" ? "#EFF6FF" : "transparent",
-                    marginBottom: 4, cursor: "pointer",
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: c.dot }} />
-                      <span style={{ fontSize: 12, fontWeight: c.name === "Mathematics" ? 600 : 400, color: c.name === "Mathematics" ? "#1D4ED8" : "#374151" }}>{c.name}</span>
-                    </div>
-                    <span style={{ fontSize: 10, color: "#94A3B8", background: "#F1F5F9", padding: "1px 6px", borderRadius: 4 }}>{c.count}</span>
+            <div style={{ background: "#F8FAFC", padding: 20, display: "grid", gridTemplateColumns: "180px 1fr", gap: 14 }}>
+              {/* sidebar */}
+              <div style={{ background: "#fff", borderRadius: 12, border: "1px solid rgba(0,0,0,0.06)", padding: 14 }}>
+                <p style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Subjects</p>
+                {[{ name: "Mathematics", dot: "#3B82F6", active: true }, { name: "Science", dot: "#22C55E", active: false }, { name: "English", dot: "#D97706", active: false }, { name: "Life Skills", dot: "#A855F7", active: false }].map(c => (
+                  <div key={c.name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 9px", borderRadius: 8, marginBottom: 3, background: c.active ? "#EFF6FF" : "transparent" }}>
+                    <div style={{ width: 7, height: 7, borderRadius: "50%", background: c.dot, flexShrink: 0 }} />
+                    <span style={{ fontSize: 11, fontWeight: c.active ? 600 : 400, color: c.active ? "#1D4ED8" : "#374151" }}>{c.name}</span>
                   </div>
                 ))}
+                <div style={{ marginTop: 14, padding: 10, background: "#FFFBF5", borderRadius: 10, border: "1px solid #FEF3C7" }}>
+                  <p style={{ fontSize: 9, fontWeight: 700, color: "#92400E", marginBottom: 6 }}>NOW PLAYING</p>
+                  <p style={{ fontSize: 11, fontWeight: 600, color: "#0A0A0A", marginBottom: 4 }}>Unit 3 — Addition</p>
+                  <div className="pbar"><div className="pfill" style={{ width: "55%" }} /></div>
+                  <p style={{ fontSize: 9, color: "#94A3B8", marginTop: 4 }}>12:30 / 22:15</p>
+                </div>
               </div>
-
-              {/* Main content */}
+              {/* books */}
               <div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                  <div>
-                    <p style={{ fontSize: 16, fontWeight: 700, color: "#0A0A0A" }}>Mathematics</p>
-                    <p style={{ fontSize: 11, color: "#94A3B8" }}>4 books · 2 ready</p>
-                  </div>
-                  <button style={{ fontSize: 12, fontWeight: 600, background: "#1D4ED8", color: "#fff", border: "none", borderRadius: 8, padding: "7px 14px", cursor: "pointer" }}>+ Upload PDF</button>
+                  <div><p style={{ fontSize: 15, fontWeight: 700 }}>Mathematics</p><p style={{ fontSize: 11, color: "#94A3B8" }}>Grade 3 · 4 units · 3 ready</p></div>
+                  <button style={{ fontSize: 11, fontWeight: 600, background: "#D97706", color: "#fff", border: "none", borderRadius: 8, padding: "7px 12px", cursor: "pointer" }}>+ Upload PDF</button>
                 </div>
-
-                {DEMO_BOOKS.map(b => (
-                  <div key={b.title} style={{
-                    background: "#fff", borderRadius: 10, border: "1px solid rgba(0,0,0,0.06)",
-                    padding: "12px 16px", marginBottom: 8,
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <div style={{
-                        width: 36, height: 36, borderRadius: 8,
-                        background: b.status === "ready" ? "#DBEAFE" : "#F1F5F9",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 16,
-                      }}>
-                        {b.status === "ready" ? "🔊" : "⏳"}
+                {[
+                  { title: "Unit 1 — Counting & Numbers", time: "15 min", status: "ready", playing: false },
+                  { title: "Unit 2 — Shapes & Patterns",  time: "19 min", status: "ready", playing: false },
+                  { title: "Unit 3 — Addition",           time: "22 min", status: "ready", playing: true  },
+                  { title: "Unit 4 — Subtraction",        time: "—",      status: "processing", playing: false },
+                ].map(b => (
+                  <div key={b.title} style={{ background: b.playing ? "#FFFBF5" : "#fff", border: `1px solid ${b.playing ? "#FDE68A" : "rgba(0,0,0,0.06)"}`, borderRadius: 10, padding: "11px 14px", marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 34, height: 34, borderRadius: 8, background: b.playing ? "#FEF3C7" : b.status === "ready" ? "#DBEAFE" : "#F1F5F9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>
+                        {b.playing ? "▶️" : b.status === "ready" ? "🔊" : "⏳"}
                       </div>
                       <div>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: "#0A0A0A" }}>{b.title}</p>
-                        <p style={{ fontSize: 11, color: "#94A3B8", marginTop: 1 }}>
-                          {b.status === "ready" ? `${b.time} audio` : "Converting to audio…"}
-                        </p>
+                        <p style={{ fontSize: 12, fontWeight: b.playing ? 700 : 600, color: b.playing ? "#92400E" : "#0A0A0A" }}>{b.title}</p>
+                        <p style={{ fontSize: 10, color: "#94A3B8", marginTop: 1 }}>{b.status === "ready" ? `${b.time} audio` : "Converting to audio…"}</p>
                       </div>
                     </div>
-                    <span className={b.status === "ready" ? "badge-ready" : "badge-proc"}>
-                      {b.status === "ready" ? "Ready" : "Processing"}
-                    </span>
+                    <span className={b.status === "ready" ? "badge-r" : "badge-p"}>{b.playing ? "Playing" : b.status === "ready" ? "Ready" : "Processing"}</span>
                   </div>
                 ))}
               </div>
@@ -319,204 +198,86 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════
-          LOGOS / SOCIAL PROOF BAR
-      ══════════════════════════════════════════════════ */}
-      <div style={{ borderTop: "1px solid rgba(0,0,0,0.06)", borderBottom: "1px solid rgba(0,0,0,0.06)", background: "#fff", padding: "20px 32px" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", alignItems: "center", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12, color: "#94A3B8", fontWeight: 500, marginRight: 8 }}>Trusted by schools across</span>
-          {["Zambia", "Zimbabwe", "Malawi", "Botswana", "South Africa"].map(c => (
-            <span key={c} style={{ fontSize: 13, fontWeight: 600, color: "#CBD5E1", letterSpacing: "0.02em" }}>{c}</span>
+      {/* STAT BAR */}
+      <div style={{ background: "#0A0A0A", padding: "20px 28px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(3,1fr)" }}>
+          {[
+            { value: "1 in 4",  label: "Primary school children in Sub-Saharan Africa have a visual impairment" },
+            { value: "< 2 min", label: "From PDF upload to audio ready for students to hear" },
+            { value: "0",       label: "Specialist equipment required — works on any school computer" },
+          ].map(({ value, label }, i) => (
+            <div key={i} style={{ textAlign: "center", padding: "28px 20px", borderRight: i < 2 ? "1px solid #1E293B" : "none" }}>
+              <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(1.8rem,4vw,2.8rem)", color: "#D97706", fontWeight: 400, marginBottom: 8 }}>{value}</p>
+              <p style={{ fontSize: 12, color: "#64748B", lineHeight: 1.6 }}>{label}</p>
+            </div>
           ))}
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════
-          FEATURES — alternating rows
-      ══════════════════════════════════════════════════ */}
-      <section id="features" className="mesh-features" style={{ padding: "40px 32px 80px" }}>
-        <div style={{ maxWidth: 1060, margin: "0 auto" }}>
-
-          {/* Section header */}
-          <div ref={s1.ref} style={{ textAlign: "center", paddingTop: 64, paddingBottom: 16 }}>
-            <p className={`reveal d1 sec-label ${s1.visible ? "in" : ""}`}>Features</p>
-            <h2
-              className={`reveal d2 ${s1.visible ? "in" : ""}`}
-              style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(2rem, 4vw, 3.2rem)", fontWeight: 400, letterSpacing: "-0.025em", lineHeight: 1.15, maxWidth: 560, margin: "0 auto" }}
-            >
-              Everything your school needs to run an audio library.
-            </h2>
-          </div>
-
-          {/* Feature 1 — Upload & Convert */}
-          <div ref={s2.ref}>
-            <div className="feature-row">
-              <div className={`reveal d1 ${s2.visible ? "in" : ""}`}>
-                <p className="sec-label">01 — Upload & Convert</p>
-                <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(1.6rem, 3vw, 2.4rem)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 16 }}>
-                  Drop in a PDF.<br />Get back audio.
-                </h3>
-                <p style={{ fontSize: 15, color: "#64748B", lineHeight: 1.75, marginBottom: 24 }}>
-                  Admins upload any PDF — textbooks, worksheets, study guides.
-                  Amp extracts the text and sends it through our audio pipeline.
-                  The audio file appears in the library automatically when it's ready.
-                </p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {["Any PDF accepted — no formatting required", "Full text extracted, not just cover pages", "Processing happens in the background"].map(t => (
-                    <div key={t} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                      <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#DCFCE7", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
-                        <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3" stroke="#16A34A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
-                      </div>
-                      <span style={{ fontSize: 14, color: "#374151" }}>{t}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Upload mockup */}
-              <div className={`reveal d2 ${s2.visible ? "in" : ""}`} style={{ position: "relative" }}>
-                <div className="float-card" style={{ padding: 24 }}>
-                  {/* Upload zone */}
-                  <div style={{
-                    border: "2px dashed #BFDBFE", borderRadius: 12, padding: "32px 20px",
-                    textAlign: "center", background: "#EFF6FF", marginBottom: 20,
-                  }}>
-                    <div style={{ fontSize: 36, marginBottom: 8 }}>📄</div>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: "#1D4ED8", marginBottom: 4 }}>Drop your PDF here</p>
-                    <p style={{ fontSize: 12, color: "#93C5FD" }}>or click to browse · Max 50MB</p>
-                  </div>
-                  {/* Progress card */}
-                  <div style={{ background: "#F8FAFC", borderRadius: 10, border: "1px solid rgba(0,0,0,0.06)", padding: "14px 16px" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                        <span style={{ fontSize: 20 }}>📘</span>
-                        <div>
-                          <p style={{ fontSize: 13, fontWeight: 600 }}>Algebra_Unit3.pdf</p>
-                          <p style={{ fontSize: 11, color: "#94A3B8" }}>2.4 MB · Extracting text…</p>
-                        </div>
-                      </div>
-                      <span className="badge-proc">Processing</span>
-                    </div>
-                    <div className="player-bar"><div className="player-fill" style={{ width: "62%" }} /></div>
-                    <p style={{ fontSize: 10, color: "#94A3B8", marginTop: 6 }}>62% · estimated 45 seconds remaining</p>
-                  </div>
-                </div>
-
-                {/* Floating notification */}
-                <div className="float-card" style={{ position: "absolute", bottom: -18, right: -18, padding: "10px 16px", display: "flex", gap: 10, alignItems: "center", borderRadius: 12 }}>
-                  <span style={{ fontSize: 20 }}>🎉</span>
-                  <div>
-                    <p style={{ fontSize: 12, fontWeight: 700 }}>Audio ready!</p>
-                    <p style={{ fontSize: 11, color: "#94A3B8" }}>Algebra Unit 3 · 18 min</p>
-                  </div>
-                </div>
-              </div>
+      {/* MISSION */}
+      <section id="mission" ref={s1.ref} style={{ padding: "100px 28px", background: "#FFFBF5", borderTop: "1px solid rgba(217,119,6,0.1)" }}>
+        <div style={{ maxWidth: 960, margin: "0 auto" }}>
+          <div className="two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "center" }}>
+            <div>
+              <p className={`reveal d1 ${s1.visible ? "in" : ""}`} style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#D97706", marginBottom: 12 }}>Our mission</p>
+              <h2 className={`reveal d2 ${s1.visible ? "in" : ""}`} style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(1.8rem,3.5vw,2.8rem)", fontWeight: 400, letterSpacing: "-0.025em", lineHeight: 1.2, marginBottom: 20 }}>
+                No child should fall behind because they can't read the board.
+              </h2>
+              <p className={`reveal d3 ${s1.visible ? "in" : ""}`} style={{ fontSize: 15, color: "#64748B", lineHeight: 1.8, marginBottom: 16 }}>
+                Visually impaired primary school students in under-resourced schools often
+                lack access to braille materials, screen readers, or assistive technology.
+                Amp removes that barrier entirely.
+              </p>
+              <p className={`reveal d4 ${s1.visible ? "in" : ""}`} style={{ fontSize: 15, color: "#64748B", lineHeight: 1.8 }}>
+                A teacher uploads the class textbook once. From that moment, every unit
+                is available as clear, natural-sounding audio — ready to play in the
+                computer lab without any specialist equipment on the student's side.
+              </p>
             </div>
-
-            {/* Feature 2 — Browse & Listen (flipped) */}
-            <div className="feature-row flip" ref={s3.ref}>
-              {/* Player mockup */}
-              <div className={`reveal d1 ${s3.visible ? "in" : ""}`} style={{ position: "relative" }}>
-                <div className="float-card" style={{ padding: 24 }}>
-                  {/* Mini audio player */}
-                  <div style={{ textAlign: "center", marginBottom: 20 }}>
-                    <div style={{
-                      width: 90, height: 90, borderRadius: "50%",
-                      background: "linear-gradient(135deg, #DBEAFE, #EFF6FF)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 36, margin: "0 auto 14px",
-                      border: "3px solid #BFDBFE",
-                    }}>🎧</div>
-                    <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 2 }}>Algebra — Unit 3</p>
-                    <p style={{ fontSize: 12, color: "#94A3B8" }}>Mathematics · 18 min</p>
-                  </div>
-                  {/* Progress */}
-                  <div className="player-bar" style={{ marginBottom: 6 }}>
-                    <div className="player-fill" style={{ width: "38%" }} />
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#94A3B8", marginBottom: 20 }}>
-                    <span>6:52</span><span>18:10</span>
-                  </div>
-                  {/* Controls */}
-                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 20 }}>
-                    <button style={{ fontSize: 20, background: "none", border: "none", cursor: "pointer" }}>⏮</button>
-                    <button style={{
-                      width: 52, height: 52, borderRadius: "50%",
-                      background: "#1D4ED8", border: "none", cursor: "pointer",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 22, color: "#fff",
-                      boxShadow: "0 4px 16px rgba(29,78,216,0.35)",
-                    }}>▶</button>
-                    <button style={{ fontSize: 20, background: "none", border: "none", cursor: "pointer" }}>⏭</button>
-                  </div>
-                  {/* Speed */}
-                  <div style={{ textAlign: "center", marginTop: 16 }}>
-                    <span style={{ fontSize: 12, fontWeight: 600, background: "#F1F5F9", padding: "4px 12px", borderRadius: 8, color: "#374151" }}>1.25×</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Text */}
-              <div className={`reveal d2 ${s3.visible ? "in" : ""}`}>
-                <p className="sec-label">02 — Browse & Listen</p>
-                <h3 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(1.6rem, 3vw, 2.4rem)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.02em", marginBottom: 16 }}>
-                  Pick a subject.<br />Pick a unit.<br />Press play.
-                </h3>
-                <p style={{ fontSize: 15, color: "#64748B", lineHeight: 1.75, marginBottom: 24 }}>
-                  Students browse a clean library organised by subject and unit number.
-                  The full-featured audio player supports variable speed, skip forward/back,
-                  and shows a live progress bar.
+            <div className={`reveal d2 ${s1.visible ? "in" : ""}`}>
+              <div className="quote-card" style={{ marginBottom: 24 }}>
+                <p style={{ fontSize: 16, lineHeight: 1.75, color: "#0A0A0A", fontStyle: "italic", marginBottom: 12 }}>
+                  "Many of our visually impaired learners were simply being left out.
+                  They couldn't access the same materials as their classmates.
+                  A tool like this changes everything."
                 </p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {["Variable playback speed (0.5× – 2×)", "Skip forward or back 15 seconds", "Works in any modern browser — no app needed"].map(t => (
-                    <div key={t} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                      <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#DBEAFE", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
-                        <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5l2.5 2.5L8 3" stroke="#1D4ED8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
-                      </div>
-                      <span style={{ fontSize: 14, color: "#374151" }}>{t}</span>
-                    </div>
-                  ))}
-                </div>
+                <p style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>— Primary school teacher, Lusaka</p>
               </div>
+              {[
+                { icon: "🏫", text: "Designed for the computer lab — a teacher plays the audio for the whole class" },
+                { icon: "📖", text: "Works with any PDF textbook already in use at the school" },
+                { icon: "🔊", text: "Clear, naturally paced audio that works on basic speakers" },
+              ].map(({ icon, text }) => (
+                <div key={text} style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 14 }}>
+                  <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>{icon}</span>
+                  <p style={{ fontSize: 14, color: "#374151", lineHeight: 1.6 }}>{text}</p>
+                </div>
+              ))}
             </div>
           </div>
-
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════
-          HOW IT WORKS — numbered steps
-      ══════════════════════════════════════════════════ */}
-      <section id="how" style={{ background: "#fff", padding: "100px 32px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-        <div ref={s4.ref} style={{ maxWidth: 900, margin: "0 auto" }}>
+      {/* HOW IT WORKS */}
+      <section id="how" className="mesh-how" ref={s2.ref} style={{ padding: "100px 28px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 64 }}>
-            <p className={`reveal sec-label ${s4.visible ? "in" : ""}`}>How it works</p>
-            <h2
-              className={`reveal d1 ${s4.visible ? "in" : ""}`}
-              style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(2rem, 4vw, 3rem)", fontWeight: 400, letterSpacing: "-0.025em" }}
-            >
-              Up and running in minutes.
+            <p className={`reveal d1 ${s2.visible ? "in" : ""}`} style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#D97706", marginBottom: 12 }}>How it works</p>
+            <h2 className={`reveal d2 ${s2.visible ? "in" : ""}`} style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(2rem,4vw,3rem)", fontWeight: 400, letterSpacing: "-0.025em", lineHeight: 1.2 }}>
+              Simple enough for any teacher.<br />Powerful enough for every student.
             </h2>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 32, position: "relative" }}>
-            {/* Connector line */}
-            <div style={{ position: "absolute", top: 28, left: "16%", right: "16%", height: 1, background: "linear-gradient(90deg, transparent, #DBEAFE 20%, #DBEAFE 80%, transparent)", zIndex: 0 }} />
-
+          <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20, position: "relative" }}>
+            <div style={{ position: "absolute", top: 36, left: "18%", right: "18%", height: 1, background: "linear-gradient(90deg, transparent, #FDE68A 30%, #FDE68A 70%, transparent)", zIndex: 0 }} />
             {[
-              { n: "01", title: "Register your school", body: "Create an account in under a minute. No credit card needed. Your library is ready immediately." },
-              { n: "02", title: "Create categories & upload PDFs", body: "Set up subjects like Maths and Science, then upload your textbooks. Amp handles the audio conversion." },
-              { n: "03", title: "Students log in and listen", body: "Students access the library from any browser, browse by unit, and start listening instantly." },
-            ].map(({ n, title, body }, i) => (
-              <div key={n} className={`reveal d${i + 1} ${s4.visible ? "in" : ""}`} style={{ textAlign: "center", position: "relative", zIndex: 1 }}>
-                <div style={{
-                  width: 56, height: 56, borderRadius: "50%",
-                  background: "#0A0A0A", color: "#fff",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontFamily: "'DM Serif Display', serif", fontSize: 18,
-                  margin: "0 auto 20px",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                }}>{n}</div>
-                <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10, lineHeight: 1.3 }}>{title}</h3>
+              { n: "01", icon: "📋", bg: "#FEF3C7", title: "Register your school",      body: "Takes under two minutes. No technical setup. Your library is ready immediately." },
+              { n: "02", icon: "📄", bg: "#DBEAFE", title: "Upload your textbooks",     body: "Teachers upload the class PDF. Amp converts it to natural-sounding audio automatically." },
+              { n: "03", icon: "🎧", bg: "#D1FAE5", title: "Students listen together",  body: "The teacher plays the audio in the computer lab. Visually impaired students follow along with their peers." },
+            ].map(({ n, icon, bg, title, body }, i) => (
+              <div key={n} className={`reveal step-card d${i + 1} ${s2.visible ? "in" : ""}`} style={{ position: "relative", zIndex: 1 }}>
+                <div style={{ width: 56, height: 56, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, marginBottom: 20 }}>{icon}</div>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", letterSpacing: "0.08em", marginBottom: 8 }}>{n}</p>
+                <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, lineHeight: 1.3 }}>{title}</h3>
                 <p style={{ fontSize: 14, color: "#64748B", lineHeight: 1.7 }}>{body}</p>
               </div>
             ))}
@@ -524,57 +285,83 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════
-          CTA — dark
-      ══════════════════════════════════════════════════ */}
-      <section className="mesh-cta" style={{ padding: "100px 32px", textAlign: "center" }}>
-        <div style={{ maxWidth: 640, margin: "0 auto" }}>
-          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(2.4rem, 5vw, 4rem)", fontWeight: 400, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 20 }}>
-            Your library is one<br />
-            <em style={{ color: "#FED7AA" }}>upload away.</em>
+      {/* FOR TEACHERS */}
+      <section ref={s3.ref} style={{ padding: "100px 28px", background: "#fff", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 56 }}>
+            <p className={`reveal d1 ${s3.visible ? "in" : ""}`} style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#D97706", marginBottom: 12 }}>For teachers</p>
+            <h2 className={`reveal d2 ${s3.visible ? "in" : ""}`} style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(1.8rem,3.5vw,2.8rem)", fontWeight: 400, letterSpacing: "-0.025em", lineHeight: 1.2 }}>
+              Built for the classroom,<br />not the IT department.
+            </h2>
+          </div>
+          <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
+            {[
+              { icon: "⚡", title: "No training needed",       body: "If you can attach a file to an email, you can use Amp. Upload a PDF and you're done.", bg: "#FFFBF5", border: "#FEF3C7" },
+              { icon: "📚", title: "Any subject, any grade",   body: "Mathematics, Science, English, Life Skills — if it's a PDF, Amp can convert it to audio.", bg: "#F0F9FF", border: "#DBEAFE" },
+              { icon: "🔄", title: "Organised automatically",  body: "Books sorted by subject and unit number. Students always know which unit comes next.", bg: "#F0FDF4", border: "#D1FAE5" },
+              { icon: "⏸️", title: "Full playback control",    body: "Pause, rewind 15 seconds, adjust speed. Teachers control the pace of the lesson.", bg: "#FAFAFA", border: "#E2E8F0" },
+              { icon: "🔒", title: "Private to your school",   body: "Your library is completely separate from every other school. Only your teachers log in.", bg: "#FFFBF5", border: "#FEF3C7" },
+              { icon: "💻", title: "Works on any computer",    body: "No app to install. Works in any browser — including older school computers.", bg: "#F0F9FF", border: "#DBEAFE" },
+            ].map(({ icon, title, body, bg, border }, i) => (
+              <div key={title} className={`reveal d${(i % 3) + 1} ${s3.visible ? "in" : ""}`} style={{ background: bg, border: `1px solid ${border}`, borderRadius: 16, padding: "24px 22px" }}>
+                <span style={{ fontSize: 28, display: "block", marginBottom: 14 }}>{icon}</span>
+                <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>{title}</h3>
+                <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.7 }}>{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* QUOTES */}
+      <section ref={s4.ref} style={{ padding: "80px 28px", background: "#FFFBF5", borderTop: "1px solid rgba(217,119,6,0.1)" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <div className="two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+            {[
+              { quote: "We used to read handouts aloud one-by-one. Amp means the whole class hears the lesson together.", name: "Grade 4 teacher", location: "Ndola, Zambia" },
+              { quote: "Our visually impaired students now follow the same curriculum as everyone else. Their confidence has improved enormously.", name: "Headteacher", location: "Harare, Zimbabwe" },
+            ].map(({ quote, name, location }, i) => (
+              <div key={i} className={`reveal d${i + 1} ${s4.visible ? "in" : ""} quote-card`}>
+                <p style={{ fontSize: 15, lineHeight: 1.8, color: "#0A0A0A", fontStyle: "italic", marginBottom: 16 }}>"{quote}"</p>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>{name}</p>
+                <p style={{ fontSize: 12, color: "#94A3B8", marginTop: 2 }}>{location}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section ref={s5.ref} style={{ padding: "100px 28px", textAlign: "center", background: "radial-gradient(ellipse 80% 60% at 50% 0%, #0A0A0A 0%, #1C1917 100%)", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: -100, left: "50%", transform: "translateX(-50%)", width: 600, height: 300, borderRadius: "50%", background: "rgba(217,119,6,0.12)", filter: "blur(60px)", pointerEvents: "none" }} />
+        <div className={`reveal d1 ${s5.visible ? "in" : ""}`} style={{ maxWidth: 640, margin: "0 auto", position: "relative", zIndex: 1 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "#D97706", marginBottom: 20 }}>Every school. Every student.</p>
+          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(2.4rem,5vw,4rem)", fontWeight: 400, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 20 }}>
+            Give your visually impaired students a voice in their education.
           </h2>
-          <p style={{ fontSize: 16, color: "#94A3B8", lineHeight: 1.7, marginBottom: 40 }}>
-            Register your school today and give every student access to audio
-            versions of their learning materials — completely free to start.
+          <p style={{ fontSize: 16, color: "#78716C", lineHeight: 1.75, marginBottom: 44 }}>
+            Register your school today. Free to start — no credit card, no specialist hardware, no IT support required.
           </p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link
-              href="/register"
-              style={{
-                fontSize: 15, fontWeight: 700, color: "#0A0A0A",
-                background: "#FED7AA", borderRadius: 12, padding: "15px 36px",
-                textDecoration: "none",
-                boxShadow: "0 4px 24px rgba(254,215,170,0.25)",
-              }}
-            >
-              Register your school — it's free
+            <Link href="/register" style={{ fontSize: 15, fontWeight: 700, color: "#0A0A0A", background: "#D97706", borderRadius: 12, padding: "16px 40px", textDecoration: "none", boxShadow: "0 6px 28px rgba(217,119,6,0.35)" }}>
+              Register your school — free
             </Link>
-            <Link
-              href="/login"
-              style={{
-                fontSize: 15, fontWeight: 600, color: "#94A3B8",
-                background: "transparent", borderRadius: 12, padding: "15px 24px",
-                textDecoration: "none", border: "1px solid rgba(255,255,255,0.12)",
-              }}
-            >
-              Sign in →
+            <Link href="/login" style={{ fontSize: 15, fontWeight: 600, color: "#78716C", background: "transparent", borderRadius: 12, padding: "16px 24px", textDecoration: "none", border: "1px solid rgba(255,255,255,0.1)" }}>
+              Already registered? Sign in →
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════
-          FOOTER
-      ══════════════════════════════════════════════════ */}
-      <footer style={{ background: "#0A0A0A", padding: "32px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-        <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#fff" }}>Amp<span style={{ color: "#60A5FA" }}>.</span></span>
-        <p style={{ fontSize: 12, color: "#475569" }}>© {new Date().getFullYear()} Amp Digital Library · Built for accessible education.</p>
-        <div style={{ display: "flex", gap: 20, fontSize: 13, color: "#475569" }}>
+      {/* FOOTER */}
+      <footer style={{ background: "#0A0A0A", padding: "28px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
+        <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#fff" }}>Amp<span style={{ color: "#D97706" }}>.</span></span>
+        <p style={{ fontSize: 12, color: "#44403C" }}>© {new Date().getFullYear()} Amp Digital Library · Accessibility for every learner.</p>
+        <div style={{ display: "flex", gap: 20, fontSize: 13, color: "#44403C" }}>
           <Link href="/login"    style={{ color: "inherit", textDecoration: "none" }}>Sign in</Link>
           <Link href="/register" style={{ color: "inherit", textDecoration: "none" }}>Register</Link>
         </div>
       </footer>
-
     </div>
   );
 }
