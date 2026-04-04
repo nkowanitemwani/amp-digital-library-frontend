@@ -30,7 +30,7 @@ interface Book {
   title: string;
   author: string;
   unit_number: number;
-  status: "processing" | "ready" | "failed";
+  status: "pending" | "processing" | "ready" | "failed";
   audio_url?: string;
   created_at: string;
 }
@@ -84,6 +84,13 @@ function StatusBadge({ status }: { status: Book["status"] }) {
       </span>
     );
   }
+  if (status === "pending") {
+    return (
+      <span style={{ background: "#F1F5F9", color: "#64748B", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6 }}>
+        ↑ Uploading
+      </span>
+    );
+  }
   return (
     <span style={{ background: "#FEE2E2", color: "#991B1B", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6 }}>
       ✗ Failed
@@ -115,6 +122,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 // =============================================================
 
 function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }) {
+  const router = useRouter();
   const [grades, setGrades]             = useState<Grade[]>([]);
   const [selectedGrade, setSelectedGrade] = useState<Grade | null>(null);
   const [categories, setCategories]     = useState<Category[]>([]);
@@ -454,12 +462,35 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
                                 Unit {book.unit_number} — {book.title}
                               </p>
                               <p style={{ fontSize: 12, color: "#94A3B8", marginTop: 2 }}>
-                                {book.author || "No author"} · {book.status === "processing" ? "Converting to audio…" : book.status === "ready" ? "Audio ready" : "Processing failed"}
+                                {book.author || "No author"} · {
+                                  book.status === "pending"     ? "Uploading…" :
+                                  book.status === "processing"  ? "Converting to audio…" :
+                                  book.status === "ready"       ? "Audio ready" :
+                                  "Processing failed"
+                                }
                               </p>
                             </div>
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                             <StatusBadge status={book.status} />
+                            {/* Preview button — lets the admin verify audio processed correctly
+                                before students use the library. Only shown when ready. */}
+                            {book.status === "ready" && book.audio_url && (
+                              <button
+                                onClick={() => router.push(
+                                  `/player?title=${encodeURIComponent(book.title)}&audioUrl=${encodeURIComponent(book.audio_url!)}`
+                                )}
+                                style={{
+                                  background: "#EFF6FF", color: "#1D4ED8",
+                                  border: "1px solid #BFDBFE", borderRadius: 7,
+                                  padding: "5px 12px", fontSize: 12, fontWeight: 600,
+                                  cursor: "pointer", whiteSpace: "nowrap",
+                                }}
+                                title="Preview audio"
+                              >
+                                ▶ Preview
+                              </button>
+                            )}
                             <button
                               onClick={() => deleteBook(book)}
                               style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#CBD5E1", padding: 0 }}

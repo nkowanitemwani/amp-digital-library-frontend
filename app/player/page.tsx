@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 // =============================================================
@@ -145,7 +145,10 @@ function ProgressBar({
 // PLAYER PAGE
 // =============================================================
 
-export default function PlayerPage() {
+// PlayerContent is the actual player — kept separate so it can be
+// wrapped in Suspense below. Next.js App Router requires any component
+// that calls useSearchParams() to be inside a Suspense boundary.
+function PlayerContent() {
   const router      = useRouter();
   const searchParams = useSearchParams();
 
@@ -514,5 +517,24 @@ export default function PlayerPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Default export wraps PlayerContent in Suspense.
+// Without this, Next.js App Router throws an error at build time
+// because useSearchParams() requires a Suspense boundary — it
+// suspends rendering until the URL search params are available.
+export default function PlayerPage() {
+  return (
+    <Suspense fallback={
+      <div style={{
+        height: "100vh", display: "flex", alignItems: "center",
+        justifyContent: "center", fontFamily: "'DM Sans', system-ui, sans-serif",
+      }}>
+        <p style={{ color: "#94A3B8", fontSize: 15 }}>Loading player…</p>
+      </div>
+    }>
+      <PlayerContent />
+    </Suspense>
   );
 }
