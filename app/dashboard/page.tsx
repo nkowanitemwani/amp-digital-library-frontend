@@ -141,7 +141,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
 
   // ── load grades ────────────────────────────────────────────
   const loadGrades = useCallback(async () => {
-    const res = await fetch(`${API_BASE}/grades`, { headers: authHeaders(token) });
+    const res = await fetch(`${API_BASE}/admin/grades`, { headers: authHeaders(token) });
     const data = await res.json();
     if (res.ok) setGrades(data.grades ?? []);
   }, [token]);
@@ -151,7 +151,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
   // ── load categories when grade is selected ─────────────────
   useEffect(() => {
     if (!selectedGrade) { setCategories([]); setSelectedCat(null); setBooks([]); return; }
-    fetch(`${API_BASE}/grades/${selectedGrade.id}/categories`, { headers: authHeaders(token) })
+    fetch(`${API_BASE}/admin/grades/${selectedGrade.id}/categories`, { headers: authHeaders(token) })
       .then(r => r.json())
       .then(d => { setCategories(d.categories ?? []); setSelectedCat(null); setBooks([]); });
   }, [selectedGrade, token]);
@@ -160,7 +160,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
   const loadBooks = useCallback(async () => {
     if (!selectedCat || !selectedGrade) return;
     const res = await fetch(
-      `${API_BASE}/categories/${selectedCat.id}/books?grade_id=${selectedGrade.id}`,
+      `${API_BASE}/admin/categories/${selectedCat.id}/books?grade_id=${selectedGrade.id}`,
       { headers: authHeaders(token) }
     );
     const data = await res.json();
@@ -172,7 +172,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
   // ── submit: add grade ─────────────────────────────────────
   async function submitGrade() {
     setSubmitting(true); setError("");
-    const res = await fetch(`${API_BASE}/grades`, {
+    const res = await fetch(`${API_BASE}/admin/grades`, {
       method: "POST",
       headers: authHeaders(token),
       body: JSON.stringify({ name: gradeName, username: gradeUser, password: gradePass }),
@@ -188,7 +188,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
   async function submitCategory() {
     if (!selectedGrade) return;
     setSubmitting(true); setError("");
-    const res = await fetch(`${API_BASE}/categories`, {
+    const res = await fetch(`${API_BASE}/admin/categories`, {
       method: "POST",
       headers: authHeaders(token),
       body: JSON.stringify({ grade_id: selectedGrade.id, name: catName }),
@@ -196,7 +196,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
     const data = await res.json();
     if (!res.ok) { setError(data.error); setSubmitting(false); return; }
     // Reload categories for current grade
-    const catRes = await fetch(`${API_BASE}/grades/${selectedGrade.id}/categories`, { headers: authHeaders(token) });
+    const catRes = await fetch(`${API_BASE}/admin/grades/${selectedGrade.id}/categories`, { headers: authHeaders(token) });
     const catData = await catRes.json();
     setCategories(catData.categories ?? []);
     setShowAddCat(false); setCatName("");
@@ -216,7 +216,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
     form.append("author",      bookAuthor);
     form.append("unit_number", bookUnit);
 
-    const res = await fetch(`${API_BASE}/books`, {
+    const res = await fetch(`${API_BASE}/admin/books`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` }, // no Content-Type — browser sets multipart boundary
       body: form,
@@ -231,7 +231,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
   // ── delete grade ──────────────────────────────────────────
   async function deleteGrade(grade: Grade) {
     if (!confirm(`Delete "${grade.name}" and all its books? This cannot be undone.`)) return;
-    await fetch(`${API_BASE}/grades/${grade.id}`, { method: "DELETE", headers: authHeaders(token) });
+    await fetch(`${API_BASE}/admin/grades/${grade.id}`, { method: "DELETE", headers: authHeaders(token) });
     if (selectedGrade?.id === grade.id) setSelectedGrade(null);
     await loadGrades();
   }
@@ -239,9 +239,9 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
   // ── delete category ───────────────────────────────────────
   async function deleteCat(cat: Category) {
     if (!confirm(`Delete category "${cat.name}"? All books in it will also be deleted.`)) return;
-    await fetch(`${API_BASE}/categories/${cat.id}?grade_id=${cat.grade_id}`, { method: "DELETE", headers: authHeaders(token) });
+    await fetch(`${API_BASE}/admin/categories/${cat.id}?grade_id=${cat.grade_id}`, { method: "DELETE", headers: authHeaders(token) });
     if (selectedCat?.id === cat.id) setSelectedCat(null);
-    const catRes = await fetch(`${API_BASE}/grades/${cat.grade_id}/categories`, { headers: authHeaders(token) });
+    const catRes = await fetch(`${API_BASE}/admin/grades/${cat.grade_id}/categories`, { headers: authHeaders(token) });
     const catData = await catRes.json();
     setCategories(catData.categories ?? []);
   }
@@ -249,7 +249,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
   // ── delete book ───────────────────────────────────────────
   async function deleteBook(book: Book) {
     if (!confirm(`Delete "${book.title}"?`)) return;
-    await fetch(`${API_BASE}/books/${book.id}?grade_id=${book.grade_id}`, { method: "DELETE", headers: authHeaders(token) });
+    await fetch(`${API_BASE}/admin/books/${book.id}?grade_id=${book.grade_id}`, { method: "DELETE", headers: authHeaders(token) });
     await loadBooks();
   }
 
@@ -562,7 +562,7 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
 
   // ── load categories on mount ───────────────────────────────
   useEffect(() => {
-    fetch(`${API_BASE}/grades/${gradeID}/categories`, { headers: authHeaders(token) })
+    fetch(`${API_BASE}/student/grades/${gradeID}/categories`, { headers: authHeaders(token) })
       .then(r => r.json())
       .then(d => setCategories(d.categories ?? []));
   }, [gradeID, token]);
@@ -570,7 +570,7 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
   // ── load books when category selected ─────────────────────
   const loadBooks = useCallback(async () => {
     if (!selectedCat) return;
-    const res = await fetch(`${API_BASE}/categories/${selectedCat.id}/books`, { headers: authHeaders(token) });
+    const res = await fetch(`${API_BASE}/student/categories/${selectedCat.id}/books`, { headers: authHeaders(token) });
     const data = await res.json();
     if (res.ok) setBooks(data.books ?? []);
   }, [selectedCat, token]);
