@@ -148,7 +148,7 @@ export default function LoginPage() {
         {/* Logo */}
         <Link href="/" style={{ textDecoration: "none", position: "relative", zIndex: 1 }}>
           <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, color: "#fff" }}>
-            Amp<span style={{ color: "#60A5FA" }}>.</span>
+            Amplify<span style={{ color: "#60A5FA" }}>.</span>
           </span>
         </Link>
 
@@ -180,7 +180,7 @@ export default function LoginPage() {
           </h2>
 
           <p style={{ fontSize: 14, color: "#94A3B8", lineHeight: 1.75, marginBottom: 36, maxWidth: 320 }}>
-            Amp converts school textbooks into audio so visually impaired
+            Amplify converts school textbooks into audio so visually impaired
             primary school students can follow the same curriculum as
             their classmates — independently and with confidence.
           </p>
@@ -188,7 +188,7 @@ export default function LoginPage() {
           {/* How it works — compact */}
           {[
             { icon: "📄", text: "Teacher uploads the PDF textbook" },
-            { icon: "🔄", text: "Amp converts it to audio automatically" },
+            { icon: "🔄", text: "Amplify converts it to audio automatically" },
             { icon: "🎧", text: "Student listens in the computer lab" },
           ].map(({ icon, text }) => (
             <div key={text} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
@@ -216,12 +216,12 @@ export default function LoginPage() {
         </div>
 
         {/* Bottom quote */}
-        <div style={{ position: "relative", zIndex: 1, borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 24 }}>
+        {/* <div style={{ position: "relative", zIndex: 1, borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 24 }}>
           <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.6, fontStyle: "italic", marginBottom: 8 }}>
             "Our visually impaired learners are participating in lessons independently for the first time."
           </p>
           <p style={{ fontSize: 12, color: "#475569", fontWeight: 600 }}>— School principal, Blantyre, Malawi</p>
-        </div>
+        </div> */}
       </div>
 
       {/* ── RIGHT PANEL — login form ── */}
@@ -312,7 +312,6 @@ export default function LoginPage() {
                   }}
                   aria-label={showPass ? "Hide password" : "Show password"}
                 >
-                  {showPass ? "🙈" : "👁️"}
                 </button>
               </div>
             </div>

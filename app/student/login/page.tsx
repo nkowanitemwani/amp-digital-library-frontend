@@ -205,7 +205,7 @@ export default function StudentLoginPage() {
         {/* Logo */}
         <Link href="/" style={{ textDecoration: "none", position: "relative", zIndex: 1 }}>
           <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, color: "#fff" }}>
-            Amp<span style={{ color: "#60A5FA" }}>.</span>
+            Amplify<span style={{ color: "#60A5FA" }}>.</span>
           </span>
         </Link>
 
@@ -405,7 +405,6 @@ export default function StudentLoginPage() {
                   }}
                   aria-label={showPass ? "Hide password" : "Show password"}
                 >
-                  {showPass ? "🙈" : "👁️"}
                 </button>
               </div>
             </div>

@@ -164,7 +164,7 @@ export default function RegisterPage() {
       <div className="left-panel">
         <Link href="/" style={{ textDecoration: "none" }}>
           <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, color: "#0A0A0A" }}>
-            Amp<span style={{ color: "#1D4ED8" }}>.</span>
+            Amplify<span style={{ color: "#1D4ED8" }}>.</span>
           </span>
         </Link>
 
@@ -336,7 +336,6 @@ export default function RegisterPage() {
                   style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#94A3B8", padding: 0 }}
                   aria-label={showPass ? "Hide password" : "Show password"}
                 >
-                  {showPass ? "🙈" : "👁️"}
                 </button>
               </div>
               {form.password && (

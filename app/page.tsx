@@ -92,7 +92,7 @@ export default function LandingPage() {
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "14px 28px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Link href="/" style={{ textDecoration: "none" }}>
             <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#0A0A0A" }}>
-              Amp<span style={{ color: "#D97706" }}>.</span>
+              Amplify<span style={{ color: "#D97706" }}>.</span>
             </span>
           </Link>
           <div style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 14, color: "#64748B", fontWeight: 500 }}>
@@ -128,13 +128,13 @@ export default function LandingPage() {
             className={`hero-in hi3 ${mounted ? "on" : ""}`}
             style={{ fontSize: 18, color: "#64748B", lineHeight: 1.75, maxWidth: 560, margin: "0 auto 36px", textAlign: "center" }}
           >
-            Amp converts school textbooks into audio for visually impaired
+            Amplify Digital Library converts school textbooks into audio for visually impaired
             primary school students. Teachers upload a PDF — students listen.
             No reading required.
           </p>
           <div className={`hero-in hi4 ${mounted ? "on" : ""}`} style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 72 }}>
             <Link href="/register" style={{ fontSize: 15, fontWeight: 700, color: "#fff", background: "#D97706", borderRadius: 12, padding: "15px 36px", textDecoration: "none", boxShadow: "0 6px 24px rgba(217,119,6,0.35)" }}>
-              Register your school — free
+              Register your school
             </Link>
             <Link href="/login" style={{ fontSize: 15, fontWeight: 600, color: "#0A0A0A", background: "#fff", borderRadius: 12, padding: "15px 28px", textDecoration: "none", border: "1px solid rgba(0,0,0,0.1)", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               Sign in to your library
@@ -235,14 +235,14 @@ export default function LandingPage() {
               </p>
             </div>
             <div className={`reveal d2 ${s1.visible ? "in" : ""}`}>
-              <div className="quote-card" style={{ marginBottom: 24 }}>
+              {/* <div className="quote-card" style={{ marginBottom: 24 }}>
                 <p style={{ fontSize: 16, lineHeight: 1.75, color: "#0A0A0A", fontStyle: "italic", marginBottom: 12 }}>
                   "Many of our visually impaired learners were simply being left out.
                   They couldn't access the same materials as their classmates.
                   A tool like this changes everything."
                 </p>
                 <p style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>— Primary school teacher, Lusaka</p>
-              </div>
+              </div> */}
               {[
                 { icon: "🏫", text: "Designed for the computer lab — a teacher plays the audio for the whole class" },
                 { icon: "📖", text: "Works with any PDF textbook already in use at the school" },
@@ -271,7 +271,7 @@ export default function LandingPage() {
             <div style={{ position: "absolute", top: 36, left: "18%", right: "18%", height: 1, background: "linear-gradient(90deg, transparent, #FDE68A 30%, #FDE68A 70%, transparent)", zIndex: 0 }} />
             {[
               { n: "01", icon: "📋", bg: "#FEF3C7", title: "Register your school",      body: "Takes under two minutes. No technical setup. Your library is ready immediately." },
-              { n: "02", icon: "📄", bg: "#DBEAFE", title: "Upload your textbooks",     body: "Teachers upload the class PDF. Amp converts it to natural-sounding audio automatically." },
+              { n: "02", icon: "📄", bg: "#DBEAFE", title: "Upload your textbooks",     body: "Teachers upload the class PDF. Amplify converts it to natural-sounding audio automatically." },
               { n: "03", icon: "🎧", bg: "#D1FAE5", title: "Students listen together",  body: "The teacher plays the audio in the computer lab. Visually impaired students follow along with their peers." },
             ].map(({ n, icon, bg, title, body }, i) => (
               <div key={n} className={`reveal step-card d${i + 1} ${s2.visible ? "in" : ""}`} style={{ position: "relative", zIndex: 1 }}>
@@ -296,8 +296,8 @@ export default function LandingPage() {
           </div>
           <div className="three-col" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
             {[
-              { icon: "⚡", title: "No training needed",       body: "If you can attach a file to an email, you can use Amp. Upload a PDF and you're done.", bg: "#FFFBF5", border: "#FEF3C7" },
-              { icon: "📚", title: "Any subject, any grade",   body: "Mathematics, Science, English, Life Skills — if it's a PDF, Amp can convert it to audio.", bg: "#F0F9FF", border: "#DBEAFE" },
+              { icon: "⚡", title: "No training needed",       body: "If you can attach a file to an email, you can use Amplify. Upload a PDF and you're done.", bg: "#FFFBF5", border: "#FEF3C7" },
+              { icon: "📚", title: "Any subject, any grade",   body: "Mathematics, Science, English, Social Studies — if it's a PDF, Amp can convert it to audio.", bg: "#F0F9FF", border: "#DBEAFE" },
               { icon: "🔄", title: "Organised automatically",  body: "Books sorted by subject and unit number. Students always know which unit comes next.", bg: "#F0FDF4", border: "#D1FAE5" },
               { icon: "⏸️", title: "Full playback control",    body: "Pause, rewind 15 seconds, adjust speed. Teachers control the pace of the lesson.", bg: "#FAFAFA", border: "#E2E8F0" },
               { icon: "🔒", title: "Private to your school",   body: "Your library is completely separate from every other school. Only your teachers log in.", bg: "#FFFBF5", border: "#FEF3C7" },
@@ -314,7 +314,7 @@ export default function LandingPage() {
       </section>
 
       {/* QUOTES */}
-      <section ref={s4.ref} style={{ padding: "80px 28px", background: "#FFFBF5", borderTop: "1px solid rgba(217,119,6,0.1)" }}>
+      {/* <section ref={s4.ref} style={{ padding: "80px 28px", background: "#FFFBF5", borderTop: "1px solid rgba(217,119,6,0.1)" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div className="two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
             {[
@@ -329,7 +329,7 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* CTA */}
       <section ref={s5.ref} style={{ padding: "100px 28px", textAlign: "center", background: "radial-gradient(ellipse 80% 60% at 50% 0%, #0A0A0A 0%, #1C1917 100%)", position: "relative", overflow: "hidden" }}>
@@ -340,11 +340,11 @@ export default function LandingPage() {
             Give your visually impaired students a voice in their education.
           </h2>
           <p style={{ fontSize: 16, color: "#78716C", lineHeight: 1.75, marginBottom: 44 }}>
-            Register your school today. Free to start — no credit card, no specialist hardware, no IT support required.
+            Register your school today, no specialist hardware, no IT support required.
           </p>
           <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/register" style={{ fontSize: 15, fontWeight: 700, color: "#0A0A0A", background: "#D97706", borderRadius: 12, padding: "16px 40px", textDecoration: "none", boxShadow: "0 6px 28px rgba(217,119,6,0.35)" }}>
-              Register your school — free
+              Register your school
             </Link>
             <Link href="/login" style={{ fontSize: 15, fontWeight: 600, color: "#78716C", background: "transparent", borderRadius: 12, padding: "16px 24px", textDecoration: "none", border: "1px solid rgba(255,255,255,0.1)" }}>
               Already registered? Sign in →
@@ -355,12 +355,12 @@ export default function LandingPage() {
 
       {/* FOOTER */}
       <footer style={{ background: "#0A0A0A", padding: "28px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
-        <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#fff" }}>Amp<span style={{ color: "#D97706" }}>.</span></span>
-        <p style={{ fontSize: 12, color: "#44403C" }}>© {new Date().getFullYear()} Amp Digital Library · Accessibility for every learner.</p>
+        <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#fff" }}>Amplify<span style={{ color: "#D97706" }}>.</span></span>
+        <p style={{ fontSize: 12, color: "#44403C" }}>© {new Date().getFullYear()} Amplify Digital Library · Accessibility for every learner.</p>
         <div style={{ display: "flex", gap: 20, fontSize: 13, color: "#44403C" }}>
           <Link href="/login"    style={{ color: "inherit", textDecoration: "none" }}>Sign in</Link>
           <Link href="/register" style={{ color: "inherit", textDecoration: "none" }}>Register</Link>
-          <Link href="/student/login" style={{ color: "inherit", textDecoration: "none" }}>Student login</Link>
+          <Link href="/student/login" style={{ color: "inherit", textDecoration: "none" }}>Student Sign in</Link>
         </div>
       </footer>
     </div>
