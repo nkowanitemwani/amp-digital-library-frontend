@@ -339,6 +339,12 @@ export default function LoginPage() {
               Register your school →
             </Link>
           </p>
+          <p style={{ textAlign: "center", fontSize: 14, color: "#64748B" }}>
+            Are you a student?{" "}
+            <Link href="/student/login" style={{ color: "#1D4ED8", fontWeight: 600, textDecoration: "none" }}>
+              Sign in Here→
+            </Link>
+          </p>
         </div>
       </div>
     </div>

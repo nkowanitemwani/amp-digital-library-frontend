@@ -360,6 +360,7 @@ export default function LandingPage() {
         <div style={{ display: "flex", gap: 20, fontSize: 13, color: "#44403C" }}>
           <Link href="/login"    style={{ color: "inherit", textDecoration: "none" }}>Sign in</Link>
           <Link href="/register" style={{ color: "inherit", textDecoration: "none" }}>Register</Link>
+          <Link href="/student/login" style={{ color: "inherit", textDecoration: "none" }}>Student login</Link>
         </div>
       </footer>
     </div>
