@@ -278,7 +278,16 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
           <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#0A0A0A" }}>
             Amp<span style={{ color: "#1D4ED8" }}>.</span>
           </span>
-          <p style={{ fontSize: 11, color: "#94A3B8", marginTop: 2, fontWeight: 500 }}>Admin Dashboard</p>
+      <div style={{ marginTop: 8, background: "#F8FAFC", borderRadius: 6, padding: "6px 8px", border: "1px solid rgba(0,0,0,0.06)" }}>
+        <p style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 }}>School ID (give to students)</p>
+        <p style={{ fontSize: 10, fontFamily: "monospace", color: "#374151", wordBreak: "break-all", lineHeight: 1.5 }}>{schoolID}</p>
+        <button
+          onClick={() => navigator.clipboard.writeText(schoolID)}
+          style={{ marginTop: 4, fontSize: 10, fontWeight: 600, color: "#1D4ED8", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+        >
+          Copy
+        </button>
+      </div>
         </div>
 
         {/* Grades list */}
