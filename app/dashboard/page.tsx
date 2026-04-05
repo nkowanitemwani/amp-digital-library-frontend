@@ -108,7 +108,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
     }}>
       <div style={{ background: "#fff", borderRadius: 16, padding: 28, width: "100%", maxWidth: 440, boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700 }}>{title}</h3>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color:"#0A0A0A" }}>{title}</h3>
           <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94A3B8" }}>✕</button>
         </div>
         {children}
@@ -262,24 +262,37 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
   }
 
   // ── shared input style ────────────────────────────────────
-  const inp: React.CSSProperties = {
-    width: "100%", height: 44, border: "1.5px solid rgba(0,0,0,0.12)",
-    borderRadius: 8, padding: "0 12px", fontSize: 14,
-    fontFamily: "'DM Sans', system-ui, sans-serif", outline: "none", marginBottom: 12,
-  };
+const inp: React.CSSProperties = {
+  width: "100%", height: 48,
+  border: "1.5px solid rgba(0,0,0,0.12)", borderRadius: 10,
+  padding: "0 14px", fontSize: 14,
+  fontFamily: "'DM Sans', system-ui, sans-serif",
+  color: "#0A0A0A", background: "#fff", outline: "none",
+  marginBottom: 12,
+  transition: "border-color 0.15s, box-shadow 0.15s",
+};
 
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "'DM Sans', system-ui, sans-serif", background: "#F8FAFC" }}>
+
+      <style>{`
+        .modal-input:focus {
+        border-color: #1D4ED8 !important;
+        box-shadow: 0 0 0 3px rgba(29,78,216,0.1) !important;}
+        .modal-input::placeholder { color: #94A3B8; }
+        .modal-btn:hover:not(:disabled) { background: #1E40AF !important; box-shadow: 0 6px 20px rgba(29,78,216,0.4) !important; }
+        .modal-btn:active:not(:disabled) { transform: scale(0.99); }`}
+      </style>
 
       {/* ── Sidebar ── */}
       <aside style={{ width: 240, background: "#fff", borderRight: "1px solid rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", flexShrink: 0 }}>
         {/* Logo */}
         <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
           <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#0A0A0A" }}>
-            Amp<span style={{ color: "#1D4ED8" }}>.</span>
+            Amplify<span style={{ color: "#1D4ED8" }}>.</span>
           </span>
       <div style={{ marginTop: 8, background: "#F8FAFC", borderRadius: 6, padding: "6px 8px", border: "1px solid rgba(0,0,0,0.06)" }}>
-        <p style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 }}>School ID (give to students)</p>
+        <p style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 }}>School ID</p>
         <p style={{ fontSize: 10, fontFamily: "monospace", color: "#374151", wordBreak: "break-all", lineHeight: 1.5 }}>{schoolID}</p>
         <button
           onClick={() => navigator.clipboard.writeText(schoolID)}
@@ -520,15 +533,23 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
       {showAddGrade && (
         <Modal title="Add Grade" onClose={() => { setShowAddGrade(false); setError(""); }}>
           {error && <p style={{ color: "#EF4444", fontSize: 13, marginBottom: 12 }}>{error}</p>}
-          <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Grade name</label>
-          <input style={inp} placeholder="e.g. Grade 3" value={gradeName} onChange={e => setGradeName(e.target.value)} />
-          <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Login username</label>
-          <input style={inp} placeholder="e.g. grade3" value={gradeUser} onChange={e => setGradeUser(e.target.value)} />
-          <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Password</label>
-          <input style={{ ...inp, marginBottom: 20 }} type="password" placeholder="At least 6 characters" value={gradePass} onChange={e => setGradePass(e.target.value)} />
+          <label style={{ fontSize: 12, fontWeight: 600, color: "#0A0A0A", display: "block", marginBottom: 4 }}>Grade name</label>
+          <input className="modal-input" style={inp} placeholder="e.g. Grade 3" value={gradeName} onChange={e => setGradeName(e.target.value)} />
+          <label style={{ fontSize: 12, fontWeight: 600, color: "#0A0A0A", display: "block", marginBottom: 4 }}>Login username</label>
+          <input className="modal-input" style={inp} placeholder="e.g. grade3" value={gradeUser} onChange={e => setGradeUser(e.target.value)} />
+          <label style={{ fontSize: 12, fontWeight: 600, color: "#0A0A0A", display: "block", marginBottom: 4 }}>Password</label>
+          <input className="modal-input" style={{ ...inp, marginBottom: 20 }} type="password" placeholder="At least 6 characters" value={gradePass} onChange={e => setGradePass(e.target.value)} />
           <button
+            className="modal-btn"
             onClick={submitGrade} disabled={submitting || !gradeName || !gradeUser || !gradePass}
-            style={{ width: "100%", height: 44, background: "#1D4ED8", color: "#fff", border: "none", borderRadius: 9, fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: submitting ? 0.7 : 1 }}
+            style={{
+              width: "100%", height: 48, border: "none", borderRadius: 10,
+              background: "#1D4ED8", color: "#fff", fontSize: 15, fontWeight: 700,
+              fontFamily: "'DM Sans', system-ui, sans-serif", cursor: "pointer",
+              transition: "background 0.15s, transform 0.1s, box-shadow 0.15s",
+              boxShadow: "0 4px 16px rgba(29,78,216,0.3)",
+              opacity: submitting ? 0.65 : 1,
+            }}
           >
             {submitting ? "Creating…" : "Create Grade"}
           </button>
@@ -540,10 +561,18 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
         <Modal title={`Add subject to ${selectedGrade?.name}`} onClose={() => { setShowAddCat(false); setError(""); }}>
           {error && <p style={{ color: "#EF4444", fontSize: 13, marginBottom: 12 }}>{error}</p>}
           <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Subject name</label>
-          <input style={{ ...inp, marginBottom: 20 }} placeholder="e.g. Mathematics" value={catName} onChange={e => setCatName(e.target.value)} />
+          <input className="modal-input"  style={{ ...inp, marginBottom: 20 }} placeholder="e.g. Mathematics" value={catName} onChange={e => setCatName(e.target.value)} />
           <button
+            className="modal-btn"
             onClick={submitCategory} disabled={submitting || !catName}
-            style={{ width: "100%", height: 44, background: "#1D4ED8", color: "#fff", border: "none", borderRadius: 9, fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: submitting ? 0.7 : 1 }}
+            style={{
+              width: "100%", height: 48, border: "none", borderRadius: 10,
+              background: "#1D4ED8", color: "#fff", fontSize: 15, fontWeight: 700,
+              fontFamily: "'DM Sans', system-ui, sans-serif", cursor: "pointer",
+              transition: "background 0.15s, transform 0.1s, box-shadow 0.15s",
+              boxShadow: "0 4px 16px rgba(29,78,216,0.3)",
+              opacity: submitting ? 0.65 : 1,
+            }}
           >
             {submitting ? "Creating…" : "Create Subject"}
           </button>
@@ -555,11 +584,11 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
         <Modal title={`Upload PDF to ${selectedCat?.name}`} onClose={() => { setShowUpload(false); setError(""); }}>
           {error && <p style={{ color: "#EF4444", fontSize: 13, marginBottom: 12 }}>{error}</p>}
           <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Title</label>
-          <input style={inp} placeholder="e.g. Numbers to 1000" value={bookTitle} onChange={e => setBookTitle(e.target.value)} />
+          <input className="modal-input"  style={inp} placeholder="e.g. Numbers to 1000" value={bookTitle} onChange={e => setBookTitle(e.target.value)} />
           <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Author <span style={{ fontWeight: 400, color: "#94A3B8" }}>(optional)</span></label>
-          <input style={inp} placeholder="e.g. Ministry of Education" value={bookAuthor} onChange={e => setBookAuthor(e.target.value)} />
+          <input className="modal-input"  style={inp} placeholder="e.g. Ministry of Education" value={bookAuthor} onChange={e => setBookAuthor(e.target.value)} />
           <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Unit number</label>
-          <input style={inp} type="number" min={1} placeholder="e.g. 1" value={bookUnit} onChange={e => setBookUnit(e.target.value)} />
+          <input className="modal-input"  style={inp} type="number" min={1} placeholder="e.g. 1" value={bookUnit} onChange={e => setBookUnit(e.target.value)} />
           <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>PDF file</label>
           <div style={{
             border: "2px dashed #BFDBFE", borderRadius: 10, padding: "20px",
@@ -567,7 +596,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
           }}
             onClick={() => document.getElementById("pdf-upload")?.click()}
           >
-            <input id="pdf-upload" type="file" accept=".pdf" style={{ display: "none" }} onChange={e => setBookFile(e.target.files?.[0] ?? null)} />
+            <input className="modal-input"  id="pdf-upload" type="file" accept=".pdf" style={{ display: "none" }} onChange={e => setBookFile(e.target.files?.[0] ?? null)} />
             {bookFile ? (
               <p style={{ fontSize: 13, fontWeight: 600, color: "#1D4ED8" }}>📄 {bookFile.name}</p>
             ) : (
@@ -578,8 +607,16 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
             )}
           </div>
           <button
+            className="modal-btn"
             onClick={submitUpload} disabled={submitting || !bookTitle || !bookUnit || !bookFile}
-            style={{ width: "100%", height: 44, background: "#1D4ED8", color: "#fff", border: "none", borderRadius: 9, fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: submitting ? 0.7 : 1 }}
+            style={{
+              width: "100%", height: 48, border: "none", borderRadius: 10,
+              background: "#1D4ED8", color: "#fff", fontSize: 15, fontWeight: 700,
+              fontFamily: "'DM Sans', system-ui, sans-serif", cursor: "pointer",
+              transition: "background 0.15s, transform 0.1s, box-shadow 0.15s",
+              boxShadow: "0 4px 16px rgba(29,78,216,0.3)",
+              opacity: submitting ? 0.65 : 1,
+            }}
           >
             {submitting ? "Uploading…" : "Upload & Convert to Audio"}
           </button>
