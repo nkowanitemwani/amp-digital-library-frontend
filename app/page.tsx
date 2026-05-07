@@ -226,7 +226,7 @@ export default function LandingPage() {
               <p className={`reveal d3 ${s1.visible ? "in" : ""}`} style={{ fontSize: 15, color: "#64748B", lineHeight: 1.8, marginBottom: 16 }}>
                 Visually impaired primary school students in under-resourced schools often
                 lack access to braille materials, screen readers, or assistive technology.
-                Amp removes that barrier entirely.
+                Amplify removes that barrier entirely.
               </p>
               <p className={`reveal d4 ${s1.visible ? "in" : ""}`} style={{ fontSize: 15, color: "#64748B", lineHeight: 1.8 }}>
                 A teacher uploads the class textbook once. From that moment, every unit

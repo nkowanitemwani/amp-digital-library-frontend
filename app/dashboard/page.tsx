@@ -667,7 +667,7 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
         {/* Header */}
         <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
           <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#0A0A0A" }}>
-            Amp<span style={{ color: "#1D4ED8" }}>.</span>
+            Amplify<span style={{ color: "#1D4ED8" }}>.</span>
           </span>
           <p style={{ fontSize: 11, color: "#94A3B8", marginTop: 2, fontWeight: 500 }}>My Library</p>
         </div>

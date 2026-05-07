@@ -318,7 +318,7 @@ function PlayerContent() {
           ← Back
         </button>
         <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#0A0A0A" }}>
-          Amp<span style={{ color: "#1D4ED8" }}>.</span>
+          Amplify<span style={{ color: "#1D4ED8" }}>.</span>
         </span>
         <div style={{ width: 60 }} /> {/* spacer to centre logo */}
       </div>
