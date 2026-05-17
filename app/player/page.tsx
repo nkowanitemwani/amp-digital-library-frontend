@@ -153,7 +153,30 @@ function PlayerContent() {
   const searchParams = useSearchParams();
 
   const title    = searchParams.get("title")    ?? "Unknown title";
+  const mode     = searchParams.get("mode")     ?? "standard";
+  const bookId   = searchParams.get("bookId")   ?? "";
   const audioUrl = searchParams.get("audioUrl") ? decodeURIComponent(searchParams.get("audioUrl")!) : null;
+
+  // For dialogue mode the audio URL is fetched from the API using the
+  // bookId — the student dashboard passes bookId instead of a direct URL
+  // because the presigned URL must be generated server-side.
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(audioUrl);
+
+  useEffect(() => {
+    if (mode !== "dialogue" || !bookId) return;
+    const token = localStorage.getItem("amp_token");
+    if (!token) return;
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/student/books/${bookId}/dialogue`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.dialogue_url) setResolvedUrl(data.dialogue_url);
+        else setState("error");
+      })
+      .catch(() => setState("error"));
+  }, [mode, bookId]);
 
   const audioRef           = useRef<HTMLAudioElement | null>(null);
   const [state, setState]  = useState<PlayerState>("loading");
@@ -167,9 +190,15 @@ function PlayerContent() {
 
   // ── initialise audio element ──────────────────────────────
   useEffect(() => {
-    if (!audioUrl) { setState("error"); return; }
+    if (!resolvedUrl) {
+      // For dialogue mode resolvedUrl starts null and is set by the
+      // fetch above — don't treat null as an error until the fetch completes.
+      if (mode === "dialogue" && bookId) return;
+      setState("error");
+      return;
+    }
 
-    const audio = new Audio(audioUrl);
+    const audio = new Audio(resolvedUrl);
     audioRef.current = audio;
 
     audio.preload    = "metadata";
@@ -196,7 +225,7 @@ function PlayerContent() {
       audio.removeEventListener("durationchange", onDuration);
       audio.removeEventListener("ended",      onEnded);
     };
-  }, [audioUrl]);
+  }, [resolvedUrl]);
 
   // ── sync playback rate ────────────────────────────────────
   useEffect(() => {
@@ -318,7 +347,7 @@ function PlayerContent() {
           ← Back
         </button>
         <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#0A0A0A" }}>
-          Amplify<span style={{ color: "#1D4ED8" }}>.</span>
+          Amp<span style={{ color: "#1D4ED8" }}>.</span>
         </span>
         <div style={{ width: 60 }} /> {/* spacer to centre logo */}
       </div>
@@ -355,7 +384,6 @@ function PlayerContent() {
             </div>
           </div>
 
-          {/* ── Title ── */}
           <div style={{ textAlign: "center", marginBottom: 32 }}>
             <h1 style={{
               fontFamily: "'DM Serif Display', serif",
@@ -367,6 +395,18 @@ function PlayerContent() {
             }}>
               {title}
             </h1>
+            {/* Mode label — tells the student which version they are listening to */}
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 6 }}>
+              <span style={{
+                fontSize: 11, fontWeight: 700,
+                padding: "3px 10px", borderRadius: 6,
+                background: mode === "dialogue" ? "#F3E8FF" : "#DBEAFE",
+                color: mode === "dialogue" ? "#7C3AED" : "#1D4ED8",
+                textTransform: "uppercase", letterSpacing: "0.08em",
+              }}>
+                {mode === "dialogue" ? "💬 Teaching discussion" : "▶ Standard lesson"}
+              </span>
+            </div>
             <p style={{ fontSize: 13, color: "#94A3B8" }}>
               {isLoading && "Loading audio…"}
               {isError   && "Could not load audio — check your connection"}
