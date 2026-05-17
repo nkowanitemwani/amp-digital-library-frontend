@@ -42,6 +42,23 @@ interface TokenPayload {
   exp: number;
 }
 
+// FROM DASHB — progress tracking types
+interface BookProgress {
+  book_id: string;
+  title: string;
+  unit_number: number;
+  attempts: number;
+  best_score: number;
+  total_questions: number;
+  avg_score: number;
+}
+
+interface GradeProgress {
+  grade_id: string;
+  grade_name: string;
+  books: BookProgress[];
+}
+
 // =============================================================
 // HELPERS
 // =============================================================
@@ -108,7 +125,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
     }}>
       <div style={{ background: "#fff", borderRadius: 16, padding: 28, width: "100%", maxWidth: 440, boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700, color:"#0A0A0A" }}>{title}</h3>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0A0A0A" }}>{title}</h3>
           <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94A3B8" }}>✕</button>
         </div>
         {children}
@@ -123,11 +140,19 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 
 function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }) {
   const router = useRouter();
-  const [grades, setGrades]             = useState<Grade[]>([]);
+  const [grades, setGrades]               = useState<Grade[]>([]);
   const [selectedGrade, setSelectedGrade] = useState<Grade | null>(null);
-  const [categories, setCategories]     = useState<Category[]>([]);
-  const [selectedCat, setSelectedCat]   = useState<Category | null>(null);
-  const [books, setBooks]               = useState<Book[]>([]);
+  const [categories, setCategories]       = useState<Category[]>([]);
+  const [selectedCat, setSelectedCat]     = useState<Category | null>(null);
+  const [books, setBooks]                 = useState<Book[]>([]);
+
+  // FROM DASHB — top-level Library / Progress tab
+  const [activeTab, setActiveTab]         = useState<"library" | "progress">("library");
+  // FROM DASHB — Books / Progress sub-tab inside the books panel
+  const [adminTab, setAdminTab]           = useState<"books" | "progress">("books");
+  // FROM DASHB — grade-level progress data
+  const [progress, setProgress]           = useState<GradeProgress | null>(null);
+  const [loadingProgress, setLoadingProgress] = useState(false);
 
   // Modal state
   const [showAddGrade, setShowAddGrade]   = useState(false);
@@ -157,8 +182,14 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
   useEffect(() => { loadGrades(); }, [loadGrades]);
 
   // ── load categories when grade is selected ─────────────────
+  // FROM DASHB — also resets activeTab and progress on grade change
   useEffect(() => {
-    if (!selectedGrade) { setCategories([]); setSelectedCat(null); setBooks([]); return; }
+    if (!selectedGrade) {
+      setCategories([]); setSelectedCat(null); setBooks([]); setProgress(null);
+      return;
+    }
+    setActiveTab("library");
+    setProgress(null);
     fetch(`${API_BASE}/admin/grades/${selectedGrade.id}/categories`, { headers: authHeaders(token) })
       .then(r => r.json())
       .then(d => { setCategories(d.categories ?? []); setSelectedCat(null); setBooks([]); });
@@ -176,6 +207,21 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
   }, [selectedCat, selectedGrade, token]);
 
   useEffect(() => { loadBooks(); }, [loadBooks]);
+
+  // FROM DASHB — load progress for selected grade
+  const loadProgress = useCallback(async () => {
+    if (!selectedGrade) return;
+    setLoadingProgress(true);
+    const res = await fetch(`${API_BASE}/admin/grades/${selectedGrade.id}/progress`, { headers: authHeaders(token) });
+    const data = await res.json();
+    if (res.ok) setProgress(data);
+    setLoadingProgress(false);
+  }, [selectedGrade, token]);
+
+  // FROM DASHB — auto-load progress when tab is switched to "progress"
+  useEffect(() => {
+    if (activeTab === "progress") loadProgress();
+  }, [activeTab, loadProgress]);
 
   // ── submit: add grade ─────────────────────────────────────
   async function submitGrade() {
@@ -203,7 +249,6 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
     });
     const data = await res.json();
     if (!res.ok) { setError(data.error); setSubmitting(false); return; }
-    // Reload categories for current grade
     const catRes = await fetch(`${API_BASE}/admin/grades/${selectedGrade.id}/categories`, { headers: authHeaders(token) });
     const catData = await catRes.json();
     setCategories(catData.categories ?? []);
@@ -261,46 +306,47 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
     await loadBooks();
   }
 
-  // ── shared input style ────────────────────────────────────
-const inp: React.CSSProperties = {
-  width: "100%", height: 48,
-  border: "1.5px solid rgba(0,0,0,0.12)", borderRadius: 10,
-  padding: "0 14px", fontSize: 14,
-  fontFamily: "'DM Sans', system-ui, sans-serif",
-  color: "#0A0A0A", background: "#fff", outline: "none",
-  marginBottom: 12,
-  transition: "border-color 0.15s, box-shadow 0.15s",
-};
+  // ── shared input style (from DASHA — taller, more polished) ──
+  const inp: React.CSSProperties = {
+    width: "100%", height: 48,
+    border: "1.5px solid rgba(0,0,0,0.12)", borderRadius: 10,
+    padding: "0 14px", fontSize: 14,
+    fontFamily: "'DM Sans', system-ui, sans-serif",
+    color: "#0A0A0A", background: "#fff", outline: "none",
+    marginBottom: 12,
+    transition: "border-color 0.15s, box-shadow 0.15s",
+  };
 
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "'DM Sans', system-ui, sans-serif", background: "#F8FAFC" }}>
 
       <style>{`
         .modal-input:focus {
-        border-color: #1D4ED8 !important;
-        box-shadow: 0 0 0 3px rgba(29,78,216,0.1) !important;}
+          border-color: #1D4ED8 !important;
+          box-shadow: 0 0 0 3px rgba(29,78,216,0.1) !important;
+        }
         .modal-input::placeholder { color: #94A3B8; }
         .modal-btn:hover:not(:disabled) { background: #1E40AF !important; box-shadow: 0 6px 20px rgba(29,78,216,0.4) !important; }
-        .modal-btn:active:not(:disabled) { transform: scale(0.99); }`}
-      </style>
+        .modal-btn:active:not(:disabled) { transform: scale(0.99); }
+      `}</style>
 
       {/* ── Sidebar ── */}
       <aside style={{ width: 240, background: "#fff", borderRight: "1px solid rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", flexShrink: 0 }}>
-        {/* Logo */}
+        {/* Logo + School ID panel (from DASHA) */}
         <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
           <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#0A0A0A" }}>
             Amplify<span style={{ color: "#1D4ED8" }}>.</span>
           </span>
-      <div style={{ marginTop: 8, background: "#F8FAFC", borderRadius: 6, padding: "6px 8px", border: "1px solid rgba(0,0,0,0.06)" }}>
-        <p style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 }}>School ID</p>
-        <p style={{ fontSize: 10, fontFamily: "monospace", color: "#374151", wordBreak: "break-all", lineHeight: 1.5 }}>{schoolID}</p>
-        <button
-          onClick={() => navigator.clipboard.writeText(schoolID)}
-          style={{ marginTop: 4, fontSize: 10, fontWeight: 600, color: "#1D4ED8", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-        >
-          Copy
-        </button>
-      </div>
+          <div style={{ marginTop: 8, background: "#F8FAFC", borderRadius: 6, padding: "6px 8px", border: "1px solid rgba(0,0,0,0.06)" }}>
+            <p style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 }}>School ID</p>
+            <p style={{ fontSize: 10, fontFamily: "monospace", color: "#374151", wordBreak: "break-all", lineHeight: 1.5 }}>{schoolID}</p>
+            <button
+              onClick={() => navigator.clipboard.writeText(schoolID)}
+              style={{ marginTop: 4, fontSize: 10, fontWeight: 600, color: "#1D4ED8", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+            >
+              Copy
+            </button>
+          </div>
         </div>
 
         {/* Grades list */}
@@ -354,177 +400,308 @@ const inp: React.CSSProperties = {
 
       {/* ── Main panel ── */}
       <main style={{ flex: 1, display: "flex", overflow: "hidden" }}>
-
         {!selectedGrade ? (
-          // Empty state — no grade selected
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#94A3B8" }}>
             <span style={{ fontSize: 48, marginBottom: 16 }}>🏫</span>
             <p style={{ fontSize: 16, fontWeight: 600, color: "#374151" }}>Select a grade to get started</p>
             <p style={{ fontSize: 14, marginTop: 4 }}>Or create a new grade using the button in the sidebar</p>
           </div>
         ) : (
-          <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
-            {/* ── Category panel ── */}
-            <div style={{ width: 220, borderRight: "1px solid rgba(0,0,0,0.07)", background: "#fff", display: "flex", flexDirection: "column" }}>
-              <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
-                <p style={{ fontSize: 12, fontWeight: 700, color: "#0A0A0A" }}>{selectedGrade.name}</p>
-                <p style={{ fontSize: 10, color: "#94A3B8", marginTop: 1 }}>@{selectedGrade.username}</p>
-              </div>
-              <div style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
-                <p style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", padding: "0 14px", marginBottom: 6 }}>
-                  Subjects
-                </p>
-                {categories.length === 0 && (
-                  <p style={{ fontSize: 12, color: "#94A3B8", padding: "8px 14px" }}>No subjects yet</p>
-                )}
-                {categories.map(cat => (
-                  <div
-                    key={cat.id}
-                    style={{
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
-                      padding: "8px 14px", cursor: "pointer",
-                      background: selectedCat?.id === cat.id ? "#EFF6FF" : "transparent",
-                      borderLeft: selectedCat?.id === cat.id ? "3px solid #1D4ED8" : "3px solid transparent",
-                    }}
-                    onClick={() => setSelectedCat(cat)}
-                  >
-                    <span style={{ fontSize: 13, fontWeight: selectedCat?.id === cat.id ? 600 : 400, color: selectedCat?.id === cat.id ? "#1D4ED8" : "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {cat.name}
-                    </span>
-                    <button
-                      onClick={e => { e.stopPropagation(); deleteCat(cat); }}
-                      style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "#CBD5E1", padding: 0, flexShrink: 0 }}
-                    >✕</button>
-                  </div>
-                ))}
-              </div>
-              <div style={{ padding: "10px 12px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+            {/* ── Top-level tab bar: Library / Progress (FROM DASHB) ── */}
+            <div style={{
+              display: "flex", alignItems: "center", gap: 4,
+              padding: "10px 16px",
+              background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.07)",
+              flexShrink: 0,
+            }}>
+              {([["library", "📚 Library"], ["progress", "📊 Progress"]] as const).map(([tab, label]) => (
                 <button
-                  onClick={() => setShowAddCat(true)}
-                  style={{ width: "100%", height: 34, background: "#F1F5F9", color: "#374151", border: "none", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  style={{
+                    padding: "6px 14px", borderRadius: 8, border: "none",
+                    background: activeTab === tab ? "#EFF6FF" : "transparent",
+                    color: activeTab === tab ? "#1D4ED8" : "#64748B",
+                    fontSize: 13, fontWeight: activeTab === tab ? 700 : 500,
+                    cursor: "pointer",
+                  }}
                 >
-                  + Add Subject
+                  {label}
                 </button>
-              </div>
+              ))}
             </div>
 
-            {/* ── Books panel ── */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-              {!selectedCat ? (
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#94A3B8" }}>
-                  <span style={{ fontSize: 36, marginBottom: 12 }}>📂</span>
-                  <p style={{ fontSize: 15, fontWeight: 600, color: "#374151" }}>Select a subject</p>
-                  <p style={{ fontSize: 13, marginTop: 4 }}>Books will appear here</p>
-                </div>
-              ) : (
-                <>
-                  {/* Header */}
-                  <div style={{
-                    padding: "16px 24px",
-                    borderBottom: "1px solid rgba(0,0,0,0.07)",
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    background: "#fff",
-                  }}>
-                    <div>
-                      <h2 style={{ fontSize: 16, fontWeight: 700, color: "#0A0A0A" }}>{selectedCat.name}</h2>
-                      <p style={{ fontSize: 12, color: "#94A3B8", marginTop: 2 }}>
-                        {books.length} book{books.length !== 1 ? "s" : ""} · {selectedGrade.name}
-                      </p>
-                    </div>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      {/* Manual refresh */}
-                      <button
-                        onClick={loadBooks}
-                        style={{ height: 36, padding: "0 14px", background: "#F1F5F9", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#374151" }}
-                        title="Refresh book statuses"
-                      >
-                        ↻ Refresh
-                      </button>
-                      <button
-                        onClick={() => setShowUpload(true)}
-                        style={{ height: 36, padding: "0 16px", background: "#1D4ED8", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-                      >
-                        + Upload PDF
-                      </button>
-                    </div>
+            {/* ── Progress tab (FROM DASHB) ── */}
+            {activeTab === "progress" && (
+              <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                  <div>
+                    <h2 style={{ fontSize: 16, fontWeight: 700, color: "#0A0A0A" }}>Quiz Progress — {selectedGrade.name}</h2>
+                    <p style={{ fontSize: 12, color: "#94A3B8", marginTop: 2 }}>
+                      Shows scores from all quiz attempts by this grade
+                    </p>
                   </div>
+                  <button
+                    onClick={loadProgress}
+                    style={{ height: 36, padding: "0 14px", background: "#F1F5F9", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#374151" }}
+                  >
+                    ↻ Refresh
+                  </button>
+                </div>
 
-                  {/* Books list */}
-                  <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
-                    {books.length === 0 && (
-                      <div style={{ textAlign: "center", paddingTop: 60, color: "#94A3B8" }}>
-                        <span style={{ fontSize: 40, display: "block", marginBottom: 12 }}>📄</span>
-                        <p style={{ fontSize: 15, fontWeight: 600, color: "#374151" }}>No books yet</p>
-                        <p style={{ fontSize: 13, marginTop: 4 }}>Upload a PDF to add the first unit</p>
-                      </div>
-                    )}
-                    {books
-                      .sort((a, b) => a.unit_number - b.unit_number)
-                      .map(book => (
+                {loadingProgress ? (
+                  <div style={{ textAlign: "center", paddingTop: 60, color: "#94A3B8" }}>
+                    <p style={{ fontSize: 14 }}>Loading…</p>
+                  </div>
+                ) : !progress || progress.books.length === 0 ? (
+                  <div style={{ textAlign: "center", paddingTop: 60, color: "#94A3B8" }}>
+                    <span style={{ fontSize: 40, display: "block", marginBottom: 12 }}>✏️</span>
+                    <p style={{ fontSize: 15, fontWeight: 600, color: "#374151" }}>No quiz attempts yet</p>
+                    <p style={{ fontSize: 13, marginTop: 4 }}>Quiz results will appear here once students complete a quiz</p>
+                  </div>
+                ) : (
+                  progress.books
+                    .sort((a, b) => a.unit_number - b.unit_number)
+                    .map(bp => {
+                      const avgPct  = bp.total_questions > 0 ? Math.round((bp.avg_score  / bp.total_questions) * 100) : 0;
+                      const bestPct = bp.total_questions > 0 ? Math.round((bp.best_score / bp.total_questions) * 100) : 0;
+                      return (
                         <div
-                          key={book.id}
+                          key={bp.book_id}
                           style={{
-                            display: "flex", alignItems: "center", justifyContent: "space-between",
                             background: "#fff", border: "1px solid rgba(0,0,0,0.07)",
-                            borderRadius: 10, padding: "14px 18px", marginBottom: 10,
+                            borderRadius: 12, padding: "18px 20px", marginBottom: 12,
                           }}
                         >
-                          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                            <div style={{
-                              width: 40, height: 40, borderRadius: 10,
-                              background: book.status === "ready" ? "#DBEAFE" : book.status === "failed" ? "#FEE2E2" : "#F1F5F9",
-                              display: "flex", alignItems: "center", justifyContent: "center",
-                              fontSize: 18, flexShrink: 0,
-                            }}>
-                              {book.status === "ready" ? "🔊" : book.status === "failed" ? "⚠️" : "⏳"}
-                            </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                             <div>
-                              <p style={{ fontSize: 14, fontWeight: 600, color: "#0A0A0A" }}>
-                                Unit {book.unit_number} — {book.title}
+                              <p style={{ fontSize: 14, fontWeight: 700, color: "#0A0A0A" }}>
+                                Unit {bp.unit_number} — {bp.title}
                               </p>
                               <p style={{ fontSize: 12, color: "#94A3B8", marginTop: 2 }}>
-                                {book.author || "No author"} · {
-                                  book.status === "pending"     ? "Uploading…" :
-                                  book.status === "processing"  ? "Converting to audio…" :
-                                  book.status === "ready"       ? "Audio ready" :
-                                  "Processing failed"
-                                }
+                                {bp.attempts} attempt{bp.attempts !== 1 ? "s" : ""} · {bp.total_questions} questions
                               </p>
                             </div>
+                            <span style={{
+                              background: bestPct >= 75 ? "#DCFCE7" : bestPct >= 50 ? "#FEF9C3" : "#FEE2E2",
+                              color: bestPct >= 75 ? "#15803D" : bestPct >= 50 ? "#854D0E" : "#991B1B",
+                              fontSize: 12, fontWeight: 700, padding: "4px 10px", borderRadius: 7,
+                            }}>
+                              Best: {bestPct}%
+                            </span>
                           </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            <StatusBadge status={book.status} />
-                            {/* Preview button — lets the admin verify audio processed correctly
-                                before students use the library. Only shown when ready. */}
-                            {book.status === "ready" && book.audio_url && (
-                              <button
-                                onClick={() => router.push(
-                                  `/player?title=${encodeURIComponent(book.title)}&audioUrl=${encodeURIComponent(book.audio_url!)}`
-                                )}
-                                style={{
-                                  background: "#EFF6FF", color: "#1D4ED8",
-                                  border: "1px solid #BFDBFE", borderRadius: 7,
-                                  padding: "5px 12px", fontSize: 12, fontWeight: 600,
-                                  cursor: "pointer", whiteSpace: "nowrap",
-                                }}
-                                title="Preview audio"
-                              >
-                                ▶ Preview
-                              </button>
-                            )}
-                            <button
-                              onClick={() => deleteBook(book)}
-                              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#CBD5E1", padding: 0 }}
-                              title="Delete book"
-                            >✕</button>
+                          <div>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#94A3B8", marginBottom: 4 }}>
+                              <span>Average score</span>
+                              <span>{avgPct}%</span>
+                            </div>
+                            <div style={{ height: 6, background: "#F1F5F9", borderRadius: 3, overflow: "hidden" }}>
+                              <div style={{
+                                height: "100%", width: `${avgPct}%`,
+                                background: avgPct >= 75 ? "#22C55E" : avgPct >= 50 ? "#EAB308" : "#EF4444",
+                                borderRadius: 3, transition: "width 0.6s ease",
+                              }} />
+                            </div>
                           </div>
                         </div>
-                      ))}
+                      );
+                    })
+                )}
+              </div>
+            )}
+
+            {/* ── Library tab ── */}
+            {activeTab === "library" && (
+              <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+
+                {/* ── Category panel ── */}
+                <div style={{ width: 220, borderRight: "1px solid rgba(0,0,0,0.07)", background: "#fff", display: "flex", flexDirection: "column" }}>
+                  <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: "#0A0A0A" }}>{selectedGrade.name}</p>
+                    <p style={{ fontSize: 10, color: "#94A3B8", marginTop: 1 }}>@{selectedGrade.username}</p>
                   </div>
-                </>
-              )}
-            </div>
+                  <div style={{ flex: 1, overflowY: "auto", padding: "10px 0" }}>
+                    <p style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", padding: "0 14px", marginBottom: 6 }}>
+                      Subjects
+                    </p>
+                    {categories.length === 0 && (
+                      <p style={{ fontSize: 12, color: "#94A3B8", padding: "8px 14px" }}>No subjects yet</p>
+                    )}
+                    {categories.map(cat => (
+                      <div
+                        key={cat.id}
+                        style={{
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          padding: "8px 14px", cursor: "pointer",
+                          background: selectedCat?.id === cat.id ? "#EFF6FF" : "transparent",
+                          borderLeft: selectedCat?.id === cat.id ? "3px solid #1D4ED8" : "3px solid transparent",
+                        }}
+                        onClick={() => setSelectedCat(cat)}
+                      >
+                        <span style={{ fontSize: 13, fontWeight: selectedCat?.id === cat.id ? 600 : 400, color: selectedCat?.id === cat.id ? "#1D4ED8" : "#374151", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {cat.name}
+                        </span>
+                        <button
+                          onClick={e => { e.stopPropagation(); deleteCat(cat); }}
+                          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "#CBD5E1", padding: 0, flexShrink: 0 }}
+                        >✕</button>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ padding: "10px 12px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+                    <button
+                      onClick={() => setShowAddCat(true)}
+                      style={{ width: "100%", height: 34, background: "#F1F5F9", color: "#374151", border: "none", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                    >
+                      + Add Subject
+                    </button>
+                  </div>
+                </div>
+
+                {/* ── Books panel ── */}
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                  {!selectedCat ? (
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#94A3B8" }}>
+                      <span style={{ fontSize: 36, marginBottom: 12 }}>📂</span>
+                      <p style={{ fontSize: 15, fontWeight: 600, color: "#374151" }}>Select a subject</p>
+                      <p style={{ fontSize: 13, marginTop: 4 }}>Books will appear here</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Header */}
+                      <div style={{
+                        padding: "16px 24px",
+                        borderBottom: "1px solid rgba(0,0,0,0.07)",
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        background: "#fff",
+                      }}>
+                        <div>
+                          <h2 style={{ fontSize: 16, fontWeight: 700, color: "#0A0A0A" }}>{selectedCat.name}</h2>
+                          <p style={{ fontSize: 12, color: "#94A3B8", marginTop: 2 }}>
+                            {books.length} book{books.length !== 1 ? "s" : ""} · {selectedGrade.name}
+                          </p>
+                        </div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          {/* FROM DASHB — Books / Progress sub-tab switcher */}
+                          <div style={{ display: "flex", background: "#F1F5F9", borderRadius: 8, padding: 3, gap: 2 }}>
+                            <button
+                              onClick={() => setAdminTab("books")}
+                              style={{
+                                padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer",
+                                fontSize: 12, fontWeight: 600,
+                                background: adminTab === "books" ? "#fff" : "transparent",
+                                color: adminTab === "books" ? "#0A0A0A" : "#64748B",
+                                boxShadow: adminTab === "books" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                              }}
+                            >📚 Books</button>
+                            <button
+                              onClick={() => setAdminTab("progress")}
+                              style={{
+                                padding: "5px 12px", borderRadius: 6, border: "none", cursor: "pointer",
+                                fontSize: 12, fontWeight: 600,
+                                background: adminTab === "progress" ? "#fff" : "transparent",
+                                color: adminTab === "progress" ? "#0A0A0A" : "#64748B",
+                                boxShadow: adminTab === "progress" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                              }}
+                            >📊 Progress</button>
+                          </div>
+                          {/* Manual refresh */}
+                          <button
+                            onClick={loadBooks}
+                            style={{ height: 36, padding: "0 14px", background: "#F1F5F9", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#374151" }}
+                            title="Refresh book statuses"
+                          >
+                            ↻ Refresh
+                          </button>
+                          {adminTab === "books" && (
+                            <button
+                              onClick={() => setShowUpload(true)}
+                              style={{ height: 36, padding: "0 16px", background: "#1D4ED8", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                            >
+                              + Upload PDF
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Books list */}
+                      <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
+                        {books.length === 0 && (
+                          <div style={{ textAlign: "center", paddingTop: 60, color: "#94A3B8" }}>
+                            <span style={{ fontSize: 40, display: "block", marginBottom: 12 }}>📄</span>
+                            <p style={{ fontSize: 15, fontWeight: 600, color: "#374151" }}>No books yet</p>
+                            <p style={{ fontSize: 13, marginTop: 4 }}>Upload a PDF to add the first unit</p>
+                          </div>
+                        )}
+                        {books
+                          .sort((a, b) => a.unit_number - b.unit_number)
+                          .map(book => (
+                            <div
+                              key={book.id}
+                              style={{
+                                display: "flex", alignItems: "center", justifyContent: "space-between",
+                                background: "#fff", border: "1px solid rgba(0,0,0,0.07)",
+                                borderRadius: 10, padding: "14px 18px", marginBottom: 10,
+                              }}
+                            >
+                              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                                <div style={{
+                                  width: 40, height: 40, borderRadius: 10,
+                                  background: book.status === "ready" ? "#DBEAFE" : book.status === "failed" ? "#FEE2E2" : "#F1F5F9",
+                                  display: "flex", alignItems: "center", justifyContent: "center",
+                                  fontSize: 18, flexShrink: 0,
+                                }}>
+                                  {book.status === "ready" ? "🔊" : book.status === "failed" ? "⚠️" : "⏳"}
+                                </div>
+                                <div>
+                                  <p style={{ fontSize: 14, fontWeight: 600, color: "#0A0A0A" }}>
+                                    Unit {book.unit_number} — {book.title}
+                                  </p>
+                                  <p style={{ fontSize: 12, color: "#94A3B8", marginTop: 2 }}>
+                                    {book.author || "No author"} · {
+                                      book.status === "pending"     ? "Uploading…" :
+                                      book.status === "processing"  ? "Converting to audio…" :
+                                      book.status === "ready"       ? "Audio ready" :
+                                      "Processing failed"
+                                    }
+                                  </p>
+                                </div>
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                <StatusBadge status={book.status} />
+                                {/* Preview button — lets the admin verify audio before students use it */}
+                                {book.status === "ready" && book.audio_url && (
+                                  <button
+                                    onClick={() => router.push(
+                                      `/player?title=${encodeURIComponent(book.title)}&audioUrl=${encodeURIComponent(book.audio_url!)}`
+                                    )}
+                                    style={{
+                                      background: "#EFF6FF", color: "#1D4ED8",
+                                      border: "1px solid #BFDBFE", borderRadius: 7,
+                                      padding: "5px 12px", fontSize: 12, fontWeight: 600,
+                                      cursor: "pointer", whiteSpace: "nowrap",
+                                    }}
+                                    title="Preview audio"
+                                  >
+                                    ▶ Preview
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => deleteBook(book)}
+                                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#CBD5E1", padding: 0 }}
+                                  title="Delete book"
+                                >✕</button>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>
@@ -561,7 +738,7 @@ const inp: React.CSSProperties = {
         <Modal title={`Add subject to ${selectedGrade?.name}`} onClose={() => { setShowAddCat(false); setError(""); }}>
           {error && <p style={{ color: "#EF4444", fontSize: 13, marginBottom: 12 }}>{error}</p>}
           <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Subject name</label>
-          <input className="modal-input"  style={{ ...inp, marginBottom: 20 }} placeholder="e.g. Mathematics" value={catName} onChange={e => setCatName(e.target.value)} />
+          <input className="modal-input" style={{ ...inp, marginBottom: 20 }} placeholder="e.g. Mathematics" value={catName} onChange={e => setCatName(e.target.value)} />
           <button
             className="modal-btn"
             onClick={submitCategory} disabled={submitting || !catName}
@@ -584,19 +761,20 @@ const inp: React.CSSProperties = {
         <Modal title={`Upload PDF to ${selectedCat?.name}`} onClose={() => { setShowUpload(false); setError(""); }}>
           {error && <p style={{ color: "#EF4444", fontSize: 13, marginBottom: 12 }}>{error}</p>}
           <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Title</label>
-          <input className="modal-input"  style={inp} placeholder="e.g. Numbers to 1000" value={bookTitle} onChange={e => setBookTitle(e.target.value)} />
+          <input className="modal-input" style={inp} placeholder="e.g. Numbers to 1000" value={bookTitle} onChange={e => setBookTitle(e.target.value)} />
           <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Author <span style={{ fontWeight: 400, color: "#94A3B8" }}>(optional)</span></label>
-          <input className="modal-input"  style={inp} placeholder="e.g. Ministry of Education" value={bookAuthor} onChange={e => setBookAuthor(e.target.value)} />
+          <input className="modal-input" style={inp} placeholder="e.g. Ministry of Education" value={bookAuthor} onChange={e => setBookAuthor(e.target.value)} />
           <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Unit number</label>
-          <input className="modal-input"  style={inp} type="number" min={1} placeholder="e.g. 1" value={bookUnit} onChange={e => setBookUnit(e.target.value)} />
+          <input className="modal-input" style={inp} type="number" min={1} placeholder="e.g. 1" value={bookUnit} onChange={e => setBookUnit(e.target.value)} />
           <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>PDF file</label>
-          <div style={{
-            border: "2px dashed #BFDBFE", borderRadius: 10, padding: "20px",
-            textAlign: "center", background: "#EFF6FF", marginBottom: 20, cursor: "pointer",
-          }}
+          <div
+            style={{
+              border: "2px dashed #BFDBFE", borderRadius: 10, padding: "20px",
+              textAlign: "center", background: "#EFF6FF", marginBottom: 20, cursor: "pointer",
+            }}
             onClick={() => document.getElementById("pdf-upload")?.click()}
           >
-            <input className="modal-input"  id="pdf-upload" type="file" accept=".pdf" style={{ display: "none" }} onChange={e => setBookFile(e.target.files?.[0] ?? null)} />
+            <input className="modal-input" id="pdf-upload" type="file" accept=".pdf" style={{ display: "none" }} onChange={e => setBookFile(e.target.files?.[0] ?? null)} />
             {bookFile ? (
               <p style={{ fontSize: 13, fontWeight: 600, color: "#1D4ED8" }}>📄 {bookFile.name}</p>
             ) : (
@@ -635,7 +813,6 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCat, setSelectedCat] = useState<Category | null>(null);
   const [books, setBooks] = useState<Book[]>([]);
-  const [gradeName, setGradeName] = useState("");
 
   // ── load categories on mount ───────────────────────────────
   useEffect(() => {
@@ -664,7 +841,6 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
 
       {/* ── Sidebar ── */}
       <aside style={{ width: 240, background: "#fff", borderRight: "1px solid rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", flexShrink: 0 }}>
-        {/* Header */}
         <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
           <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#0A0A0A" }}>
             Amplify<span style={{ color: "#1D4ED8" }}>.</span>
@@ -783,21 +959,43 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
                       </div>
                     </div>
 
-                    {/* Play button — only when ready */}
+                    {/* FROM DASHB — three action buttons when ready */}
                     {book.status === "ready" && book.audio_url ? (
-                      <button
-                        onClick={() => router.push(`/player?bookId=${book.id}&title=${encodeURIComponent(book.title)}&audioUrl=${encodeURIComponent(book.audio_url!)}`)}
-                        style={{
-                          display: "flex", alignItems: "center", gap: 8,
-                          background: "#1D4ED8", color: "#fff",
-                          border: "none", borderRadius: 10, padding: "10px 20px",
-                          fontSize: 14, fontWeight: 700, cursor: "pointer",
-                          boxShadow: "0 4px 14px rgba(29,78,216,0.3)",
-                          flexShrink: 0,
-                        }}
-                      >
-                        ▶ Listen
-                      </button>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 7, flexShrink: 0 }}>
+                        <button
+                          onClick={() => router.push(`/player?bookId=${book.id}&title=${encodeURIComponent(book.title)}&audioUrl=${encodeURIComponent(book.audio_url!)}&mode=standard`)}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 6,
+                            background: "#1D4ED8", color: "#fff",
+                            border: "none", borderRadius: 8, padding: "8px 14px",
+                            fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
+                          }}
+                        >
+                          ▶ Listen
+                        </button>
+                        <button
+                          onClick={() => router.push(`/player?title=${encodeURIComponent(book.title)}&bookId=${book.id}&mode=dialogue`)}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 6,
+                            background: "#7C3AED", color: "#fff",
+                            border: "none", borderRadius: 8, padding: "8px 14px",
+                            fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
+                          }}
+                        >
+                          💬 Discussion
+                        </button>
+                        <button
+                          onClick={() => router.push(`/quiz?bookId=${book.id}&title=${encodeURIComponent(book.title)}`)}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 6,
+                            background: "#EA580C", color: "#fff",
+                            border: "none", borderRadius: 8, padding: "8px 14px",
+                            fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
+                          }}
+                        >
+                          ✏ Quiz
+                        </button>
+                      </div>
                     ) : (
                       <StatusBadge status={book.status} />
                     )}
