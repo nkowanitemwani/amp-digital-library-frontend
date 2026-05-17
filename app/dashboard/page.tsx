@@ -42,12 +42,32 @@ interface TokenPayload {
   exp: number;
 }
 
+// FROM DASHB — progress tracking types
+interface BookProgress {
+  book_id: string;
+  title: string;
+  unit_number: number;
+  attempts: number;
+  best_score: number;
+  total_questions: number;
+  avg_score: number;
+}
+
+interface GradeProgress {
+  grade_id: string;
+  grade_name: string;
+  books: BookProgress[];
+}
+
 // =============================================================
 // HELPERS
 // =============================================================
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
+// parseJWT decodes the JWT payload without verifying the signature.
+// Verification happens server-side — we only read claims here for
+// rendering decisions (role, school_id) not for security.
 function parseJWT(token: string): TokenPayload | null {
   try {
     const payload = token.split(".")[1];
@@ -65,6 +85,7 @@ function authHeaders(token: string) {
 // SUB-COMPONENTS
 // =============================================================
 
+// ── StatusBadge ───────────────────────────────────────────────
 function StatusBadge({ status }: { status: Book["status"] }) {
   if (status === "ready") {
     return (
@@ -94,6 +115,7 @@ function StatusBadge({ status }: { status: Book["status"] }) {
   );
 }
 
+// ── Modal ─────────────────────────────────────────────────────
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div style={{
@@ -103,7 +125,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
     }}>
       <div style={{ background: "#fff", borderRadius: 16, padding: 28, width: "100%", maxWidth: 440, boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700 }}>{title}</h3>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0A0A0A" }}>{title}</h3>
           <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94A3B8" }}>✕</button>
         </div>
         {children}
@@ -116,22 +138,6 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 // ADMIN DASHBOARD
 // =============================================================
 
-interface BookProgress {
-  book_id: string;
-  title: string;
-  unit_number: number;
-  attempts: number;
-  best_score: number;
-  total_questions: number;
-  avg_score: number;
-}
-
-interface GradeProgress {
-  grade_id: string;
-  grade_name: string;
-  books: BookProgress[];
-}
-
 function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }) {
   const router = useRouter();
   const [grades, setGrades]               = useState<Grade[]>([]);
@@ -139,28 +145,32 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
   const [categories, setCategories]       = useState<Category[]>([]);
   const [selectedCat, setSelectedCat]     = useState<Category | null>(null);
   const [books, setBooks]                 = useState<Book[]>([]);
+
+  // FROM DASHB — top-level Library / Progress tab
   const [activeTab, setActiveTab]         = useState<"library" | "progress">("library");
+  // FROM DASHB — Books / Progress sub-tab inside the books panel
   const [adminTab, setAdminTab]           = useState<"books" | "progress">("books");
+  // FROM DASHB — grade-level progress data
   const [progress, setProgress]           = useState<GradeProgress | null>(null);
   const [loadingProgress, setLoadingProgress] = useState(false);
 
   // Modal state
-  const [showAddGrade, setShowAddGrade] = useState(false);
-  const [showAddCat, setShowAddCat]     = useState(false);
-  const [showUpload, setShowUpload]     = useState(false);
+  const [showAddGrade, setShowAddGrade]   = useState(false);
+  const [showAddCat, setShowAddCat]       = useState(false);
+  const [showUpload, setShowUpload]       = useState(false);
 
   // Form state
-  const [gradeName, setGradeName]   = useState("");
-  const [gradeUser, setGradeUser]   = useState("");
-  const [gradePass, setGradePass]   = useState("");
-  const [catName, setCatName]       = useState("");
-  const [bookTitle, setBookTitle]   = useState("");
-  const [bookAuthor, setBookAuthor] = useState("");
-  const [bookUnit, setBookUnit]     = useState("");
-  const [bookFile, setBookFile]     = useState<File | null>(null);
+  const [gradeName, setGradeName]         = useState("");
+  const [gradeUser, setGradeUser]         = useState("");
+  const [gradePass, setGradePass]         = useState("");
+  const [catName, setCatName]             = useState("");
+  const [bookTitle, setBookTitle]         = useState("");
+  const [bookAuthor, setBookAuthor]       = useState("");
+  const [bookUnit, setBookUnit]           = useState("");
+  const [bookFile, setBookFile]           = useState<File | null>(null);
 
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError]           = useState("");
+  const [submitting, setSubmitting]       = useState(false);
+  const [error, setError]                 = useState("");
 
   // ── load grades ────────────────────────────────────────────
   const loadGrades = useCallback(async () => {
@@ -171,7 +181,8 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
 
   useEffect(() => { loadGrades(); }, [loadGrades]);
 
-  // Load categories when grade selected, reset tabs and progress.
+  // ── load categories when grade is selected ─────────────────
+  // FROM DASHB — also resets activeTab and progress on grade change
   useEffect(() => {
     if (!selectedGrade) {
       setCategories([]); setSelectedCat(null); setBooks([]); setProgress(null);
@@ -197,7 +208,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
 
   useEffect(() => { loadBooks(); }, [loadBooks]);
 
-  // ── load progress ──────────────────────────────────────────
+  // FROM DASHB — load progress for selected grade
   const loadProgress = useCallback(async () => {
     if (!selectedGrade) return;
     setLoadingProgress(true);
@@ -207,6 +218,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
     setLoadingProgress(false);
   }, [selectedGrade, token]);
 
+  // FROM DASHB — auto-load progress when tab is switched to "progress"
   useEffect(() => {
     if (activeTab === "progress") loadProgress();
   }, [activeTab, loadProgress]);
@@ -259,7 +271,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
 
     const res = await fetch(`${API_BASE}/admin/books`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}` }, // no Content-Type — browser sets multipart boundary
       body: form,
     });
     const data = await res.json();
@@ -294,24 +306,50 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
     await loadBooks();
   }
 
+  // ── shared input style (from DASHA — taller, more polished) ──
   const inp: React.CSSProperties = {
-    width: "100%", height: 44, border: "1.5px solid rgba(0,0,0,0.12)",
-    borderRadius: 8, padding: "0 12px", fontSize: 14,
-    fontFamily: "'DM Sans', system-ui, sans-serif", outline: "none", marginBottom: 12,
+    width: "100%", height: 48,
+    border: "1.5px solid rgba(0,0,0,0.12)", borderRadius: 10,
+    padding: "0 14px", fontSize: 14,
+    fontFamily: "'DM Sans', system-ui, sans-serif",
+    color: "#0A0A0A", background: "#fff", outline: "none",
+    marginBottom: 12,
+    transition: "border-color 0.15s, box-shadow 0.15s",
   };
 
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "'DM Sans', system-ui, sans-serif", background: "#F8FAFC" }}>
 
+      <style>{`
+        .modal-input:focus {
+          border-color: #1D4ED8 !important;
+          box-shadow: 0 0 0 3px rgba(29,78,216,0.1) !important;
+        }
+        .modal-input::placeholder { color: #94A3B8; }
+        .modal-btn:hover:not(:disabled) { background: #1E40AF !important; box-shadow: 0 6px 20px rgba(29,78,216,0.4) !important; }
+        .modal-btn:active:not(:disabled) { transform: scale(0.99); }
+      `}</style>
+
       {/* ── Sidebar ── */}
       <aside style={{ width: 240, background: "#fff", borderRight: "1px solid rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", flexShrink: 0 }}>
+        {/* Logo + School ID panel (from DASHA) */}
         <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
           <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#0A0A0A" }}>
-            Amp<span style={{ color: "#1D4ED8" }}>.</span>
+            Amplify<span style={{ color: "#1D4ED8" }}>.</span>
           </span>
-          <p style={{ fontSize: 11, color: "#94A3B8", marginTop: 2, fontWeight: 500 }}>Admin Dashboard</p>
+          <div style={{ marginTop: 8, background: "#F8FAFC", borderRadius: 6, padding: "6px 8px", border: "1px solid rgba(0,0,0,0.06)" }}>
+            <p style={{ fontSize: 9, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 }}>School ID</p>
+            <p style={{ fontSize: 10, fontFamily: "monospace", color: "#374151", wordBreak: "break-all", lineHeight: 1.5 }}>{schoolID}</p>
+            <button
+              onClick={() => navigator.clipboard.writeText(schoolID)}
+              style={{ marginTop: 4, fontSize: 10, fontWeight: 600, color: "#1D4ED8", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+            >
+              Copy
+            </button>
+          </div>
         </div>
 
+        {/* Grades list */}
         <div style={{ flex: 1, overflowY: "auto", padding: "12px 0" }}>
           <p style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", padding: "0 16px", marginBottom: 6 }}>
             Grades
@@ -345,6 +383,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
           ))}
         </div>
 
+        {/* Add grade button */}
         <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
           <button
             onClick={() => setShowAddGrade(true)}
@@ -370,7 +409,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
         ) : (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
-            {/* ── Top-level tab bar (Library / Progress) ── */}
+            {/* ── Top-level tab bar: Library / Progress (FROM DASHB) ── */}
             <div style={{
               display: "flex", alignItems: "center", gap: 4,
               padding: "10px 16px",
@@ -394,12 +433,12 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
               ))}
             </div>
 
-            {/* ── Progress tab ── */}
+            {/* ── Progress tab (FROM DASHB) ── */}
             {activeTab === "progress" && (
               <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                   <div>
-                    <h2 style={{ fontSize: 16, fontWeight: 700 }}>Quiz Progress — {selectedGrade.name}</h2>
+                    <h2 style={{ fontSize: 16, fontWeight: 700, color: "#0A0A0A" }}>Quiz Progress — {selectedGrade.name}</h2>
                     <p style={{ fontSize: 12, color: "#94A3B8", marginTop: 2 }}>
                       Shows scores from all quiz attempts by this grade
                     </p>
@@ -545,6 +584,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
                           </p>
                         </div>
                         <div style={{ display: "flex", gap: 8 }}>
+                          {/* FROM DASHB — Books / Progress sub-tab switcher */}
                           <div style={{ display: "flex", background: "#F1F5F9", borderRadius: 8, padding: 3, gap: 2 }}>
                             <button
                               onClick={() => setAdminTab("books")}
@@ -567,15 +607,21 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
                               }}
                             >📊 Progress</button>
                           </div>
+                          {/* Manual refresh */}
                           <button
                             onClick={loadBooks}
                             style={{ height: 36, padding: "0 14px", background: "#F1F5F9", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#374151" }}
-                          >↻ Refresh</button>
+                            title="Refresh book statuses"
+                          >
+                            ↻ Refresh
+                          </button>
                           {adminTab === "books" && (
                             <button
                               onClick={() => setShowUpload(true)}
                               style={{ height: 36, padding: "0 16px", background: "#1D4ED8", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-                            >+ Upload PDF</button>
+                            >
+                              + Upload PDF
+                            </button>
                           )}
                         </div>
                       </div>
@@ -615,9 +661,9 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
                                   </p>
                                   <p style={{ fontSize: 12, color: "#94A3B8", marginTop: 2 }}>
                                     {book.author || "No author"} · {
-                                      book.status === "pending"    ? "Uploading…" :
-                                      book.status === "processing" ? "Converting to audio…" :
-                                      book.status === "ready"      ? "Audio ready" :
+                                      book.status === "pending"     ? "Uploading…" :
+                                      book.status === "processing"  ? "Converting to audio…" :
+                                      book.status === "ready"       ? "Audio ready" :
                                       "Processing failed"
                                     }
                                   </p>
@@ -625,6 +671,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
                               </div>
                               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                                 <StatusBadge status={book.status} />
+                                {/* Preview button — lets the admin verify audio before students use it */}
                                 {book.status === "ready" && book.audio_url && (
                                   <button
                                     onClick={() => router.push(
@@ -663,15 +710,23 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
       {showAddGrade && (
         <Modal title="Add Grade" onClose={() => { setShowAddGrade(false); setError(""); }}>
           {error && <p style={{ color: "#EF4444", fontSize: 13, marginBottom: 12 }}>{error}</p>}
-          <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Grade name</label>
-          <input style={inp} placeholder="e.g. Grade 3" value={gradeName} onChange={e => setGradeName(e.target.value)} />
-          <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Login username</label>
-          <input style={inp} placeholder="e.g. grade3" value={gradeUser} onChange={e => setGradeUser(e.target.value)} />
-          <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Password</label>
-          <input style={{ ...inp, marginBottom: 20 }} type="password" placeholder="At least 6 characters" value={gradePass} onChange={e => setGradePass(e.target.value)} />
+          <label style={{ fontSize: 12, fontWeight: 600, color: "#0A0A0A", display: "block", marginBottom: 4 }}>Grade name</label>
+          <input className="modal-input" style={inp} placeholder="e.g. Grade 3" value={gradeName} onChange={e => setGradeName(e.target.value)} />
+          <label style={{ fontSize: 12, fontWeight: 600, color: "#0A0A0A", display: "block", marginBottom: 4 }}>Login username</label>
+          <input className="modal-input" style={inp} placeholder="e.g. grade3" value={gradeUser} onChange={e => setGradeUser(e.target.value)} />
+          <label style={{ fontSize: 12, fontWeight: 600, color: "#0A0A0A", display: "block", marginBottom: 4 }}>Password</label>
+          <input className="modal-input" style={{ ...inp, marginBottom: 20 }} type="password" placeholder="At least 6 characters" value={gradePass} onChange={e => setGradePass(e.target.value)} />
           <button
+            className="modal-btn"
             onClick={submitGrade} disabled={submitting || !gradeName || !gradeUser || !gradePass}
-            style={{ width: "100%", height: 44, background: "#1D4ED8", color: "#fff", border: "none", borderRadius: 9, fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: submitting ? 0.7 : 1 }}
+            style={{
+              width: "100%", height: 48, border: "none", borderRadius: 10,
+              background: "#1D4ED8", color: "#fff", fontSize: 15, fontWeight: 700,
+              fontFamily: "'DM Sans', system-ui, sans-serif", cursor: "pointer",
+              transition: "background 0.15s, transform 0.1s, box-shadow 0.15s",
+              boxShadow: "0 4px 16px rgba(29,78,216,0.3)",
+              opacity: submitting ? 0.65 : 1,
+            }}
           >
             {submitting ? "Creating…" : "Create Grade"}
           </button>
@@ -683,10 +738,18 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
         <Modal title={`Add subject to ${selectedGrade?.name}`} onClose={() => { setShowAddCat(false); setError(""); }}>
           {error && <p style={{ color: "#EF4444", fontSize: 13, marginBottom: 12 }}>{error}</p>}
           <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Subject name</label>
-          <input style={{ ...inp, marginBottom: 20 }} placeholder="e.g. Mathematics" value={catName} onChange={e => setCatName(e.target.value)} />
+          <input className="modal-input" style={{ ...inp, marginBottom: 20 }} placeholder="e.g. Mathematics" value={catName} onChange={e => setCatName(e.target.value)} />
           <button
+            className="modal-btn"
             onClick={submitCategory} disabled={submitting || !catName}
-            style={{ width: "100%", height: 44, background: "#1D4ED8", color: "#fff", border: "none", borderRadius: 9, fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: submitting ? 0.7 : 1 }}
+            style={{
+              width: "100%", height: 48, border: "none", borderRadius: 10,
+              background: "#1D4ED8", color: "#fff", fontSize: 15, fontWeight: 700,
+              fontFamily: "'DM Sans', system-ui, sans-serif", cursor: "pointer",
+              transition: "background 0.15s, transform 0.1s, box-shadow 0.15s",
+              boxShadow: "0 4px 16px rgba(29,78,216,0.3)",
+              opacity: submitting ? 0.65 : 1,
+            }}
           >
             {submitting ? "Creating…" : "Create Subject"}
           </button>
@@ -698,11 +761,11 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
         <Modal title={`Upload PDF to ${selectedCat?.name}`} onClose={() => { setShowUpload(false); setError(""); }}>
           {error && <p style={{ color: "#EF4444", fontSize: 13, marginBottom: 12 }}>{error}</p>}
           <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Title</label>
-          <input style={inp} placeholder="e.g. Numbers to 1000" value={bookTitle} onChange={e => setBookTitle(e.target.value)} />
+          <input className="modal-input" style={inp} placeholder="e.g. Numbers to 1000" value={bookTitle} onChange={e => setBookTitle(e.target.value)} />
           <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Author <span style={{ fontWeight: 400, color: "#94A3B8" }}>(optional)</span></label>
-          <input style={inp} placeholder="e.g. Ministry of Education" value={bookAuthor} onChange={e => setBookAuthor(e.target.value)} />
+          <input className="modal-input" style={inp} placeholder="e.g. Ministry of Education" value={bookAuthor} onChange={e => setBookAuthor(e.target.value)} />
           <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Unit number</label>
-          <input style={inp} type="number" min={1} placeholder="e.g. 1" value={bookUnit} onChange={e => setBookUnit(e.target.value)} />
+          <input className="modal-input" style={inp} type="number" min={1} placeholder="e.g. 1" value={bookUnit} onChange={e => setBookUnit(e.target.value)} />
           <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>PDF file</label>
           <div
             style={{
@@ -711,7 +774,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
             }}
             onClick={() => document.getElementById("pdf-upload")?.click()}
           >
-            <input id="pdf-upload" type="file" accept=".pdf" style={{ display: "none" }} onChange={e => setBookFile(e.target.files?.[0] ?? null)} />
+            <input className="modal-input" id="pdf-upload" type="file" accept=".pdf" style={{ display: "none" }} onChange={e => setBookFile(e.target.files?.[0] ?? null)} />
             {bookFile ? (
               <p style={{ fontSize: 13, fontWeight: 600, color: "#1D4ED8" }}>📄 {bookFile.name}</p>
             ) : (
@@ -722,8 +785,16 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
             )}
           </div>
           <button
+            className="modal-btn"
             onClick={submitUpload} disabled={submitting || !bookTitle || !bookUnit || !bookFile}
-            style={{ width: "100%", height: 44, background: "#1D4ED8", color: "#fff", border: "none", borderRadius: 9, fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: submitting ? 0.7 : 1 }}
+            style={{
+              width: "100%", height: 48, border: "none", borderRadius: 10,
+              background: "#1D4ED8", color: "#fff", fontSize: 15, fontWeight: 700,
+              fontFamily: "'DM Sans', system-ui, sans-serif", cursor: "pointer",
+              transition: "background 0.15s, transform 0.1s, box-shadow 0.15s",
+              boxShadow: "0 4px 16px rgba(29,78,216,0.3)",
+              opacity: submitting ? 0.65 : 1,
+            }}
           >
             {submitting ? "Uploading…" : "Upload & Convert to Audio"}
           </button>
@@ -743,12 +814,14 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
   const [selectedCat, setSelectedCat] = useState<Category | null>(null);
   const [books, setBooks] = useState<Book[]>([]);
 
+  // ── load categories on mount ───────────────────────────────
   useEffect(() => {
     fetch(`${API_BASE}/student/grades/${gradeID}/categories`, { headers: authHeaders(token) })
       .then(r => r.json())
       .then(d => setCategories(d.categories ?? []));
   }, [gradeID, token]);
 
+  // ── load books when category selected ─────────────────────
   const loadBooks = useCallback(async () => {
     if (!selectedCat) return;
     const res = await fetch(`${API_BASE}/student/categories/${selectedCat.id}/books`, { headers: authHeaders(token) });
@@ -770,11 +843,12 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
       <aside style={{ width: 240, background: "#fff", borderRight: "1px solid rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", flexShrink: 0 }}>
         <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
           <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#0A0A0A" }}>
-            Amp<span style={{ color: "#1D4ED8" }}>.</span>
+            Amplify<span style={{ color: "#1D4ED8" }}>.</span>
           </span>
           <p style={{ fontSize: 11, color: "#94A3B8", marginTop: 2, fontWeight: 500 }}>My Library</p>
         </div>
 
+        {/* Category list */}
         <div style={{ flex: 1, overflowY: "auto", padding: "12px 0" }}>
           <p style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", padding: "0 16px", marginBottom: 6 }}>
             Subjects
@@ -799,6 +873,7 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
           ))}
         </div>
 
+        {/* Sign out */}
         <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
           <button
             onClick={handleSignOut}
@@ -819,6 +894,7 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
           </div>
         ) : (
           <>
+            {/* Header */}
             <div style={{
               padding: "16px 28px",
               borderBottom: "1px solid rgba(0,0,0,0.07)",
@@ -839,6 +915,7 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
               </button>
             </div>
 
+            {/* Books */}
             <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
               {books.length === 0 && (
                 <div style={{ textAlign: "center", paddingTop: 60, color: "#94A3B8" }}>
@@ -859,6 +936,7 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                      {/* Unit number badge */}
                       <div style={{
                         width: 44, height: 44, borderRadius: 11,
                         background: book.status === "ready" ? "#DBEAFE" : "#F1F5F9",
@@ -881,10 +959,11 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
                       </div>
                     </div>
 
+                    {/* FROM DASHB — three action buttons when ready */}
                     {book.status === "ready" && book.audio_url ? (
                       <div style={{ display: "flex", flexDirection: "column", gap: 7, flexShrink: 0 }}>
                         <button
-                          onClick={() => router.push(`/player?title=${encodeURIComponent(book.title)}&audioUrl=${encodeURIComponent(book.audio_url!)}&mode=standard`)}
+                          onClick={() => router.push(`/player?bookId=${book.id}&title=${encodeURIComponent(book.title)}&audioUrl=${encodeURIComponent(book.audio_url!)}&mode=standard`)}
                           style={{
                             display: "flex", alignItems: "center", gap: 6,
                             background: "#1D4ED8", color: "#fff",
@@ -950,6 +1029,7 @@ export default function DashboardPage() {
 
     const parsed = parseJWT(stored);
 
+    // Reject expired tokens immediately.
     if (!parsed || parsed.exp * 1000 < Date.now()) {
       localStorage.removeItem("amp_token");
       router.push("/login");
@@ -962,6 +1042,8 @@ export default function DashboardPage() {
   }, [router]);
 
   if (!ready || !token || !payload) {
+    // Show nothing while we check the token — avoids a flash of content
+    // before the redirect fires if the token is missing or expired.
     return (
       <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         <p style={{ color: "#94A3B8", fontSize: 15 }}>Loading…</p>
@@ -969,6 +1051,7 @@ export default function DashboardPage() {
     );
   }
 
+  // Route to the correct view based on the role in the JWT.
   if (payload.role === "admin") {
     return <AdminDashboard token={token} schoolID={payload.school_id} />;
   }
@@ -977,6 +1060,7 @@ export default function DashboardPage() {
     return <StudentDashboard token={token} gradeID={payload.subject_id} schoolID={payload.school_id} />;
   }
 
+  // Unknown role — clear token and redirect.
   localStorage.removeItem("amp_token");
   router.push("/login");
   return null;
