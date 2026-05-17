@@ -225,7 +225,7 @@ function PlayerContent() {
       audio.removeEventListener("durationchange", onDuration);
       audio.removeEventListener("ended",      onEnded);
     };
-  }, [audioUrl]);
+  }, [resolvedUrl]);
 
   // ── sync playback rate ────────────────────────────────────
   useEffect(() => {
