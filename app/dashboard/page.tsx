@@ -384,18 +384,28 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
         </div>
 
         {/* Add grade button */}
-        <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-          <button
-            onClick={() => setShowAddGrade(true)}
-            style={{
-              width: "100%", height: 38, background: "#1D4ED8", color: "#fff",
-              border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600,
-              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-            }}
-          >
-            + Add Grade
-          </button>
-        </div>
+          <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(0,0,0,0.06)", display: "flex", flexDirection: "column", gap: 8 }}>
+            <button
+              onClick={() => setShowAddGrade(true)}
+              style={{
+                width: "100%", height: 38, background: "#1D4ED8", color: "#fff",
+                border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              }}
+            >
+              + Add Grade
+            </button>
+            <button
+              onClick={() => { localStorage.removeItem("amp_token"); router.push("/login"); }}
+              style={{
+                width: "100%", height: 36, background: "transparent", color: "#94A3B8",
+                border: "1px solid rgba(0,0,0,0.08)", borderRadius: 8, fontSize: 12,
+                fontWeight: 600, cursor: "pointer",
+              }}
+            >
+              Sign out
+            </button>
+          </div>
       </aside>
 
       {/* ── Main panel ── */}
