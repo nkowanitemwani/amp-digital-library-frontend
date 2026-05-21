@@ -2,6 +2,15 @@
 
 import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Pencil,
+  AlertTriangle,
+  ArrowLeft,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Volume2,
+} from "lucide-react";
 
 // =============================================================
 // TYPES
@@ -48,10 +57,8 @@ function QuizContent() {
   const [errorMsg, setErrorMsg]       = useState("");
   const [selectedKey, setSelectedKey] = useState<number | null>(null);
 
-  // Audio ref for playing question audio automatically.
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // ── Load token and questions on mount ─────────────────────
   useEffect(() => {
     const stored = localStorage.getItem("amp_token");
     if (!stored) { router.push("/student/login"); return; }
@@ -80,14 +87,11 @@ function QuizContent() {
       });
   }, [token, bookId]);
 
-  // ── Auto-play question audio when question changes ─────────
   useEffect(() => {
     if (phase !== "question") return;
     const q = questions[current];
     if (!q?.question_audio_url) return;
 
-    // Small delay so the UI renders before audio starts — avoids the
-    // audio cutting off the first syllable.
     const t = setTimeout(() => {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -107,10 +111,6 @@ function QuizContent() {
     };
   }, [current, phase, questions]);
 
-  // ── Keyboard handler ────────────────────────────────────────
-  // Press 1-4 to answer, Enter to confirm, R to replay audio.
-  // This is the primary interaction model — the student never
-  // needs to click or read anything.
   const handleKey = useCallback((e: KeyboardEvent) => {
     if (phase === "intro" && e.code === "Enter") {
       setPhase("question");
@@ -120,15 +120,13 @@ function QuizContent() {
     if (phase === "question") {
       const num = parseInt(e.key);
       if (num >= 1 && num <= 4) {
-        setSelectedKey(num - 1); // highlight selection
+        setSelectedKey(num - 1);
         return;
       }
-      // Enter confirms the highlighted selection
       if (e.code === "Enter" && selectedKey !== null) {
         confirmAnswer(selectedKey);
         return;
       }
-      // R replays the question audio
       if (e.key === "r" || e.key === "R") {
         const q = questions[current];
         if (q?.question_audio_url) {
@@ -150,7 +148,6 @@ function QuizContent() {
     return () => window.removeEventListener("keydown", handleKey);
   }, [handleKey]);
 
-  // ── Confirm answer and advance ──────────────────────────────
   function confirmAnswer(answerIdx: number) {
     const newAnswers = [...answers, answerIdx];
     setAnswers(newAnswers);
@@ -163,7 +160,6 @@ function QuizContent() {
     }
   }
 
-  // ── Submit quiz ─────────────────────────────────────────────
   async function submitQuiz(finalAnswers: number[]) {
     setPhase("submitting");
     try {
@@ -185,7 +181,6 @@ function QuizContent() {
   const q = questions[current];
   const progressPct = questions.length > 0 ? ((current / questions.length) * 100) : 0;
 
-  // ── Shared container style ──────────────────────────────────
   const container: React.CSSProperties = {
     minHeight: "100vh",
     fontFamily: "'DM Sans', system-ui, sans-serif",
@@ -221,14 +216,14 @@ function QuizContent() {
     return (
       <div style={container}>
         <div style={card}>
-          <p style={{ fontSize: 24, marginBottom: 12 }}>⚠️</p>
+          <AlertTriangle size={24} color="#EF4444" style={{ marginBottom: 12 }} />
           <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Quiz unavailable</h2>
           <p style={{ fontSize: 14, color: "#64748B", marginBottom: 24 }}>{errorMsg}</p>
           <button
             onClick={() => router.back()}
-            style={{ background: "#1D4ED8", color: "#fff", border: "none", borderRadius: 10, padding: "12px 24px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
+            style={{ background: "#1D4ED8", color: "#fff", border: "none", borderRadius: 10, padding: "12px 24px", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
           >
-            ← Go back
+            <ArrowLeft size={14} /> Go back
           </button>
         </div>
       </div>
@@ -240,16 +235,17 @@ function QuizContent() {
     return (
       <div style={container}>
         <div style={card}>
-          {/* Back */}
           <button
             onClick={() => router.back()}
-            style={{ background: "none", border: "none", color: "#64748B", fontSize: 13, fontWeight: 600, cursor: "pointer", marginBottom: 24, padding: 0 }}
+            style={{ background: "none", border: "none", color: "#64748B", fontSize: 13, fontWeight: 600, cursor: "pointer", marginBottom: 24, padding: 0, display: "flex", alignItems: "center", gap: 6 }}
           >
-            ← Back to library
+            <ArrowLeft size={14} /> Back to library
           </button>
 
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 52, marginBottom: 16 }}>✏️</div>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+              <Pencil size={48} color="#1D4ED8" strokeWidth={1.5} />
+            </div>
             <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 26, fontWeight: 400, letterSpacing: "-0.02em", marginBottom: 8 }}>
               Quiz time
             </h1>
@@ -258,7 +254,6 @@ function QuizContent() {
               {questions.length} questions — listen to each question then press a number key to answer
             </p>
 
-            {/* Keyboard guide */}
             <div style={{ background: "#F8FAFC", borderRadius: 12, padding: "16px 20px", marginBottom: 32, textAlign: "left" }}>
               <p style={{ fontSize: 12, fontWeight: 700, color: "#374151", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.06em" }}>How to answer</p>
               {[
@@ -301,7 +296,10 @@ function QuizContent() {
     return (
       <div style={container}>
         <div style={{ ...card, textAlign: "center" }}>
-          <p style={{ fontSize: 32, marginBottom: 16 }}>⏳</p>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+            <Loader2 size={32} color="#64748B" style={{ animation: "spin 1s linear infinite" }} />
+          </div>
+          <style>{`@keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }`}</style>
           <p style={{ fontSize: 16, color: "#64748B" }}>Saving your answers…</p>
         </div>
       </div>
@@ -316,8 +314,10 @@ function QuizContent() {
       <div style={container}>
         <div style={card}>
           <div style={{ textAlign: "center", marginBottom: 32 }}>
-            <div style={{ fontSize: 56, marginBottom: 12 }}>
-              {result.passed ? "🎉" : "📖"}
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
+              {result.passed
+                ? <CheckCircle2 size={56} color="#15803D" strokeWidth={1.5} />
+                : <Pencil size={56} color="#EA580C" strokeWidth={1.5} />}
             </div>
             <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, fontWeight: 400, letterSpacing: "-0.02em", marginBottom: 8 }}>
               {result.passed ? "Well done!" : "Keep practising!"}
@@ -330,7 +330,6 @@ function QuizContent() {
             </p>
           </div>
 
-          {/* Per-question review */}
           <div style={{ marginBottom: 28 }}>
             <p style={{ fontSize: 12, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>
               Review
@@ -347,7 +346,11 @@ function QuizContent() {
                   }}
                 >
                   <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                    <span style={{ fontSize: 16, flexShrink: 0 }}>{isCorrect ? "✅" : "❌"}</span>
+                    <span style={{ flexShrink: 0, marginTop: 1 }}>
+                      {isCorrect
+                        ? <CheckCircle2 size={16} color="#15803D" />
+                        : <XCircle size={16} color="#B91C1C" />}
+                    </span>
                     <div>
                       <p style={{ fontSize: 13, fontWeight: 600, color: "#0A0A0A", marginBottom: 4 }}>
                         Q{i + 1}. {q.question_text}
@@ -374,9 +377,10 @@ function QuizContent() {
               background: "#1D4ED8", color: "#fff",
               border: "none", borderRadius: 12,
               fontSize: 15, fontWeight: 700, cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             }}
           >
-            ← Back to library — Press Enter
+            <ArrowLeft size={15} /> Back to library — Press Enter
           </button>
         </div>
       </div>
@@ -388,7 +392,6 @@ function QuizContent() {
     <div style={container}>
       <div style={{ width: "100%", maxWidth: 560 }}>
 
-        {/* Progress bar */}
         <div style={{ marginBottom: 16 }}>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#94A3B8", marginBottom: 6 }}>
             <span>Question {current + 1} of {questions.length}</span>
@@ -400,7 +403,6 @@ function QuizContent() {
         </div>
 
         <div style={card}>
-          {/* Replay audio hint */}
           <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
             <button
               onClick={() => {
@@ -409,13 +411,12 @@ function QuizContent() {
                   audioRef.current.play().catch(() => {});
                 }
               }}
-              style={{ background: "#EFF6FF", color: "#1D4ED8", border: "none", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+              style={{ background: "#EFF6FF", color: "#1D4ED8", border: "none", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
             >
-              🔊 Replay (R)
+              <Volume2 size={14} /> Replay (R)
             </button>
           </div>
 
-          {/* Question */}
           <h2 style={{
             fontFamily: "'DM Serif Display', serif",
             fontSize: "clamp(1.1rem, 3vw, 1.5rem)",
@@ -426,7 +427,6 @@ function QuizContent() {
             {q?.question_text}
           </h2>
 
-          {/* Options — four clear buttons, numbered 1-4 */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
             {q?.options.map((option, idx) => {
               const isSelected = selectedKey === idx;
@@ -461,7 +461,6 @@ function QuizContent() {
             })}
           </div>
 
-          {/* Confirm button — only active when an option is selected */}
           <button
             onClick={() => selectedKey !== null && confirmAnswer(selectedKey)}
             disabled={selectedKey === null}
@@ -482,7 +481,6 @@ function QuizContent() {
   );
 }
 
-// Suspense wrapper required for useSearchParams in Next.js App Router.
 export default function QuizPage() {
   return (
     <Suspense fallback={

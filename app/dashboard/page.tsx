@@ -3,6 +3,30 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import {
+  School,
+  BookOpen,
+  FolderOpen,
+  FileText,
+  Volume2,
+  AlertTriangle,
+  Loader2,
+  Check,
+  X,
+  Upload,
+  RefreshCw,
+  Plus,
+  ArrowLeft,
+  Play,
+  MessageSquare,
+  Pencil,
+  Headphones,
+  BarChart2,
+  CheckCircle2,
+  Library,
+  LogOut,
+  Copy,
+} from "lucide-react";
 
 // =============================================================
 // TYPES
@@ -42,7 +66,6 @@ interface TokenPayload {
   exp: number;
 }
 
-// FROM DASHB — progress tracking types
 interface BookProgress {
   book_id: string;
   title: string;
@@ -65,9 +88,6 @@ interface GradeProgress {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
-// parseJWT decodes the JWT payload without verifying the signature.
-// Verification happens server-side — we only read claims here for
-// rendering decisions (role, school_id) not for security.
 function parseJWT(token: string): TokenPayload | null {
   try {
     const payload = token.split(".")[1];
@@ -89,28 +109,28 @@ function authHeaders(token: string) {
 function StatusBadge({ status }: { status: Book["status"] }) {
   if (status === "ready") {
     return (
-      <span style={{ background: "#DCFCE7", color: "#15803D", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6 }}>
-        ✓ Ready
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#DCFCE7", color: "#15803D", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6 }}>
+        <Check size={11} /> Ready
       </span>
     );
   }
   if (status === "processing") {
     return (
-      <span style={{ background: "#FEF9C3", color: "#854D0E", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6 }}>
-        ⏳ Processing
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#FEF9C3", color: "#854D0E", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6 }}>
+        <Loader2 size={11} style={{ animation: "spin 1s linear infinite" }} /> Processing
       </span>
     );
   }
   if (status === "pending") {
     return (
-      <span style={{ background: "#F1F5F9", color: "#64748B", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6 }}>
-        ↑ Uploading
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#F1F5F9", color: "#64748B", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6 }}>
+        <Upload size={11} /> Uploading
       </span>
     );
   }
   return (
-    <span style={{ background: "#FEE2E2", color: "#991B1B", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6 }}>
-      ✗ Failed
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#FEE2E2", color: "#991B1B", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6 }}>
+      <X size={11} /> Failed
     </span>
   );
 }
@@ -126,7 +146,9 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
       <div style={{ background: "#fff", borderRadius: 16, padding: 28, width: "100%", maxWidth: 440, boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0A0A0A" }}>{title}</h3>
-          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94A3B8" }}>✕</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#94A3B8", display: "flex", alignItems: "center" }}>
+            <X size={20} />
+          </button>
         </div>
         {children}
       </div>
@@ -146,33 +168,27 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
   const [selectedCat, setSelectedCat]     = useState<Category | null>(null);
   const [books, setBooks]                 = useState<Book[]>([]);
 
-  // FROM DASHB — top-level Library / Progress tab
-  const [activeTab, setActiveTab]         = useState<"library" | "progress">("library");
-  // FROM DASHB — Books / Progress sub-tab inside the books panel
-  const [adminTab, setAdminTab]           = useState<"books" | "progress">("books");
-  // FROM DASHB — grade-level progress data
-  const [progress, setProgress]           = useState<GradeProgress | null>(null);
+  const [activeTab, setActiveTab]             = useState<"library" | "progress">("library");
+  const [adminTab, setAdminTab]               = useState<"books" | "progress">("books");
+  const [progress, setProgress]               = useState<GradeProgress | null>(null);
   const [loadingProgress, setLoadingProgress] = useState(false);
 
-  // Modal state
-  const [showAddGrade, setShowAddGrade]   = useState(false);
-  const [showAddCat, setShowAddCat]       = useState(false);
-  const [showUpload, setShowUpload]       = useState(false);
+  const [showAddGrade, setShowAddGrade] = useState(false);
+  const [showAddCat, setShowAddCat]     = useState(false);
+  const [showUpload, setShowUpload]     = useState(false);
 
-  // Form state
-  const [gradeName, setGradeName]         = useState("");
-  const [gradeUser, setGradeUser]         = useState("");
-  const [gradePass, setGradePass]         = useState("");
-  const [catName, setCatName]             = useState("");
-  const [bookTitle, setBookTitle]         = useState("");
-  const [bookAuthor, setBookAuthor]       = useState("");
-  const [bookUnit, setBookUnit]           = useState("");
-  const [bookFile, setBookFile]           = useState<File | null>(null);
+  const [gradeName, setGradeName] = useState("");
+  const [gradeUser, setGradeUser] = useState("");
+  const [gradePass, setGradePass] = useState("");
+  const [catName, setCatName]     = useState("");
+  const [bookTitle, setBookTitle] = useState("");
+  const [bookAuthor, setBookAuthor] = useState("");
+  const [bookUnit, setBookUnit]   = useState("");
+  const [bookFile, setBookFile]   = useState<File | null>(null);
 
-  const [submitting, setSubmitting]       = useState(false);
-  const [error, setError]                 = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError]           = useState("");
 
-  // ── load grades ────────────────────────────────────────────
   const loadGrades = useCallback(async () => {
     const res = await fetch(`${API_BASE}/admin/grades`, { headers: authHeaders(token) });
     const data = await res.json();
@@ -181,8 +197,6 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
 
   useEffect(() => { loadGrades(); }, [loadGrades]);
 
-  // ── load categories when grade is selected ─────────────────
-  // FROM DASHB — also resets activeTab and progress on grade change
   useEffect(() => {
     if (!selectedGrade) {
       setCategories([]); setSelectedCat(null); setBooks([]); setProgress(null);
@@ -195,7 +209,6 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
       .then(d => { setCategories(d.categories ?? []); setSelectedCat(null); setBooks([]); });
   }, [selectedGrade, token]);
 
-  // ── load books when category is selected ──────────────────
   const loadBooks = useCallback(async () => {
     if (!selectedCat || !selectedGrade) return;
     const res = await fetch(
@@ -208,7 +221,6 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
 
   useEffect(() => { loadBooks(); }, [loadBooks]);
 
-  // FROM DASHB — load progress for selected grade
   const loadProgress = useCallback(async () => {
     if (!selectedGrade) return;
     setLoadingProgress(true);
@@ -218,12 +230,10 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
     setLoadingProgress(false);
   }, [selectedGrade, token]);
 
-  // FROM DASHB — auto-load progress when tab is switched to "progress"
   useEffect(() => {
     if (activeTab === "progress") loadProgress();
   }, [activeTab, loadProgress]);
 
-  // ── submit: add grade ─────────────────────────────────────
   async function submitGrade() {
     setSubmitting(true); setError("");
     const res = await fetch(`${API_BASE}/admin/grades`, {
@@ -238,7 +248,6 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
     setSubmitting(false);
   }
 
-  // ── submit: add category ──────────────────────────────────
   async function submitCategory() {
     if (!selectedGrade) return;
     setSubmitting(true); setError("");
@@ -256,7 +265,6 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
     setSubmitting(false);
   }
 
-  // ── submit: upload book ───────────────────────────────────
   async function submitUpload() {
     if (!selectedGrade || !selectedCat || !bookFile) return;
     setSubmitting(true); setError("");
@@ -271,7 +279,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
 
     const res = await fetch(`${API_BASE}/admin/books`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` }, // no Content-Type — browser sets multipart boundary
+      headers: { Authorization: `Bearer ${token}` },
       body: form,
     });
     const data = await res.json();
@@ -281,7 +289,6 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
     setSubmitting(false);
   }
 
-  // ── delete grade ──────────────────────────────────────────
   async function deleteGrade(grade: Grade) {
     if (!confirm(`Delete "${grade.name}" and all its books? This cannot be undone.`)) return;
     await fetch(`${API_BASE}/admin/grades/${grade.id}`, { method: "DELETE", headers: authHeaders(token) });
@@ -289,7 +296,6 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
     await loadGrades();
   }
 
-  // ── delete category ───────────────────────────────────────
   async function deleteCat(cat: Category) {
     if (!confirm(`Delete category "${cat.name}"? All books in it will also be deleted.`)) return;
     await fetch(`${API_BASE}/admin/categories/${cat.id}?grade_id=${cat.grade_id}`, { method: "DELETE", headers: authHeaders(token) });
@@ -299,14 +305,12 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
     setCategories(catData.categories ?? []);
   }
 
-  // ── delete book ───────────────────────────────────────────
   async function deleteBook(book: Book) {
     if (!confirm(`Delete "${book.title}"?`)) return;
     await fetch(`${API_BASE}/admin/books/${book.id}?grade_id=${book.grade_id}`, { method: "DELETE", headers: authHeaders(token) });
     await loadBooks();
   }
 
-  // ── shared input style (from DASHA — taller, more polished) ──
   const inp: React.CSSProperties = {
     width: "100%", height: 48,
     border: "1.5px solid rgba(0,0,0,0.12)", borderRadius: 10,
@@ -321,6 +325,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
     <div style={{ display: "flex", height: "100vh", fontFamily: "'DM Sans', system-ui, sans-serif", background: "#F8FAFC" }}>
 
       <style>{`
+        @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
         .modal-input:focus {
           border-color: #1D4ED8 !important;
           box-shadow: 0 0 0 3px rgba(29,78,216,0.1) !important;
@@ -330,9 +335,8 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
         .modal-btn:active:not(:disabled) { transform: scale(0.99); }
       `}</style>
 
-      {/* ── Sidebar ── */}
+      {/* Sidebar */}
       <aside style={{ width: 240, background: "#fff", borderRight: "1px solid rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", flexShrink: 0 }}>
-        {/* Logo + School ID panel (from DASHA) */}
         <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
           <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#0A0A0A" }}>
             Amplify<span style={{ color: "#1D4ED8" }}>.</span>
@@ -342,14 +346,13 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
             <p style={{ fontSize: 10, fontFamily: "monospace", color: "#374151", wordBreak: "break-all", lineHeight: 1.5 }}>{schoolID}</p>
             <button
               onClick={() => navigator.clipboard.writeText(schoolID)}
-              style={{ marginTop: 4, fontSize: 10, fontWeight: 600, color: "#1D4ED8", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+              style={{ marginTop: 4, fontSize: 10, fontWeight: 600, color: "#1D4ED8", background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 3 }}
             >
-              Copy
+              <Copy size={10} /> Copy
             </button>
           </div>
         </div>
 
-        {/* Grades list */}
         <div style={{ flex: 1, overflowY: "auto", padding: "12px 0" }}>
           <p style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", padding: "0 16px", marginBottom: 6 }}>
             Grades
@@ -376,74 +379,84 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
               </div>
               <button
                 onClick={e => { e.stopPropagation(); deleteGrade(g); }}
-                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "#CBD5E1", padding: 0 }}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#CBD5E1", padding: 0, display: "flex", alignItems: "center" }}
                 title="Delete grade"
-              >✕</button>
+              >
+                <X size={14} />
+              </button>
             </div>
           ))}
         </div>
 
-        {/* Add grade button */}
-          <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(0,0,0,0.06)", display: "flex", flexDirection: "column", gap: 8 }}>
-            <button
-              onClick={() => setShowAddGrade(true)}
-              style={{
-                width: "100%", height: 38, background: "#1D4ED8", color: "#fff",
-                border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600,
-                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-              }}
-            >
-              + Add Grade
-            </button>
-            <button
-              onClick={() => { localStorage.removeItem("amp_token"); router.push("/login"); }}
-              style={{
-                width: "100%", height: 36, background: "transparent", color: "#94A3B8",
-                border: "1px solid rgba(0,0,0,0.08)", borderRadius: 8, fontSize: 12,
-                fontWeight: 600, cursor: "pointer",
-              }}
-            >
-              Sign out
-            </button>
-          </div>
+        <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(0,0,0,0.06)", display: "flex", flexDirection: "column", gap: 8 }}>
+          <button
+            onClick={() => setShowAddGrade(true)}
+            style={{
+              width: "100%", height: 38, background: "#1D4ED8", color: "#fff",
+              border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600,
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+            }}
+          >
+            <Plus size={14} /> Add Grade
+          </button>
+          <button
+            onClick={() => { localStorage.removeItem("amp_token"); router.push("/login"); }}
+            style={{
+              width: "100%", height: 36, background: "transparent", color: "#94A3B8",
+              border: "1px solid rgba(0,0,0,0.08)", borderRadius: 8, fontSize: 12,
+              fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+            }}
+          >
+            <LogOut size={13} /> Sign out
+          </button>
+        </div>
       </aside>
 
-      {/* ── Main panel ── */}
+      {/* Main panel */}
       <main style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {!selectedGrade ? (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#94A3B8" }}>
-            <span style={{ fontSize: 48, marginBottom: 16 }}>🏫</span>
+            <School size={48} color="#CBD5E1" style={{ marginBottom: 16 }} />
             <p style={{ fontSize: 16, fontWeight: 600, color: "#374151" }}>Select a grade to get started</p>
             <p style={{ fontSize: 14, marginTop: 4 }}>Or create a new grade using the button in the sidebar</p>
           </div>
         ) : (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
-            {/* ── Top-level tab bar: Library / Progress (FROM DASHB) ── */}
+            {/* Top-level tab bar */}
             <div style={{
               display: "flex", alignItems: "center", gap: 4,
               padding: "10px 16px",
               background: "#fff", borderBottom: "1px solid rgba(0,0,0,0.07)",
               flexShrink: 0,
             }}>
-              {([["library", "📚 Library"], ["progress", "📊 Progress"]] as const).map(([tab, label]) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  style={{
-                    padding: "6px 14px", borderRadius: 8, border: "none",
-                    background: activeTab === tab ? "#EFF6FF" : "transparent",
-                    color: activeTab === tab ? "#1D4ED8" : "#64748B",
-                    fontSize: 13, fontWeight: activeTab === tab ? 700 : 500,
-                    cursor: "pointer",
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
+              <button
+                onClick={() => setActiveTab("library")}
+                style={{
+                  padding: "6px 14px", borderRadius: 8, border: "none",
+                  background: activeTab === "library" ? "#EFF6FF" : "transparent",
+                  color: activeTab === "library" ? "#1D4ED8" : "#64748B",
+                  fontSize: 13, fontWeight: activeTab === "library" ? 700 : 500,
+                  cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+                }}
+              >
+                <Library size={14} /> Library
+              </button>
+              <button
+                onClick={() => setActiveTab("progress")}
+                style={{
+                  padding: "6px 14px", borderRadius: 8, border: "none",
+                  background: activeTab === "progress" ? "#EFF6FF" : "transparent",
+                  color: activeTab === "progress" ? "#1D4ED8" : "#64748B",
+                  fontSize: 13, fontWeight: activeTab === "progress" ? 700 : 500,
+                  cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+                }}
+              >
+                <BarChart2 size={14} /> Progress
+              </button>
             </div>
 
-            {/* ── Progress tab (FROM DASHB) ── */}
+            {/* Progress tab */}
             {activeTab === "progress" && (
               <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
@@ -455,21 +468,22 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
                   </div>
                   <button
                     onClick={loadProgress}
-                    style={{ height: 36, padding: "0 14px", background: "#F1F5F9", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#374151" }}
+                    style={{ height: 36, padding: "0 14px", background: "#F1F5F9", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#374151", display: "flex", alignItems: "center", gap: 6 }}
                   >
-                    ↻ Refresh
+                    <RefreshCw size={13} /> Refresh
                   </button>
                 </div>
 
                 {loadingProgress ? (
-                  <div style={{ textAlign: "center", paddingTop: 60, color: "#94A3B8" }}>
+                  <div style={{ textAlign: "center", paddingTop: 60, color: "#94A3B8", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+                    <Loader2 size={24} style={{ animation: "spin 1s linear infinite" }} />
                     <p style={{ fontSize: 14 }}>Loading…</p>
                   </div>
                 ) : !progress || progress.books.length === 0 ? (
-                  <div style={{ textAlign: "center", paddingTop: 60, color: "#94A3B8" }}>
-                    <span style={{ fontSize: 40, display: "block", marginBottom: 12 }}>✏️</span>
+                  <div style={{ textAlign: "center", paddingTop: 60, color: "#94A3B8", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+                    <Pencil size={40} color="#CBD5E1" />
                     <p style={{ fontSize: 15, fontWeight: 600, color: "#374151" }}>No quiz attempts yet</p>
-                    <p style={{ fontSize: 13, marginTop: 4 }}>Quiz results will appear here once students complete a quiz</p>
+                    <p style={{ fontSize: 13 }}>Quiz results will appear here once students complete a quiz</p>
                   </div>
                 ) : (
                   progress.books
@@ -522,11 +536,11 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
               </div>
             )}
 
-            {/* ── Library tab ── */}
+            {/* Library tab */}
             {activeTab === "library" && (
               <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
 
-                {/* ── Category panel ── */}
+                {/* Category panel */}
                 <div style={{ width: 220, borderRight: "1px solid rgba(0,0,0,0.07)", background: "#fff", display: "flex", flexDirection: "column" }}>
                   <div style={{ padding: "16px 16px 12px", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
                     <p style={{ fontSize: 12, fontWeight: 700, color: "#0A0A0A" }}>{selectedGrade.name}</p>
@@ -555,26 +569,28 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
                         </span>
                         <button
                           onClick={e => { e.stopPropagation(); deleteCat(cat); }}
-                          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "#CBD5E1", padding: 0, flexShrink: 0 }}
-                        >✕</button>
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "#CBD5E1", padding: 0, flexShrink: 0, display: "flex", alignItems: "center" }}
+                        >
+                          <X size={13} />
+                        </button>
                       </div>
                     ))}
                   </div>
                   <div style={{ padding: "10px 12px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
                     <button
                       onClick={() => setShowAddCat(true)}
-                      style={{ width: "100%", height: 34, background: "#F1F5F9", color: "#374151", border: "none", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                      style={{ width: "100%", height: 34, background: "#F1F5F9", color: "#374151", border: "none", borderRadius: 7, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}
                     >
-                      + Add Subject
+                      <Plus size={13} /> Add Subject
                     </button>
                   </div>
                 </div>
 
-                {/* ── Books panel ── */}
+                {/* Books panel */}
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
                   {!selectedCat ? (
                     <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#94A3B8" }}>
-                      <span style={{ fontSize: 36, marginBottom: 12 }}>📂</span>
+                      <FolderOpen size={36} color="#CBD5E1" style={{ marginBottom: 12 }} />
                       <p style={{ fontSize: 15, fontWeight: 600, color: "#374151" }}>Select a subject</p>
                       <p style={{ fontSize: 13, marginTop: 4 }}>Books will appear here</p>
                     </div>
@@ -594,7 +610,6 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
                           </p>
                         </div>
                         <div style={{ display: "flex", gap: 8 }}>
-                          {/* FROM DASHB — Books / Progress sub-tab switcher */}
                           <div style={{ display: "flex", background: "#F1F5F9", borderRadius: 8, padding: 3, gap: 2 }}>
                             <button
                               onClick={() => setAdminTab("books")}
@@ -604,8 +619,11 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
                                 background: adminTab === "books" ? "#fff" : "transparent",
                                 color: adminTab === "books" ? "#0A0A0A" : "#64748B",
                                 boxShadow: adminTab === "books" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                                display: "flex", alignItems: "center", gap: 5,
                               }}
-                            >📚 Books</button>
+                            >
+                              <BookOpen size={12} /> Books
+                            </button>
                             <button
                               onClick={() => setAdminTab("progress")}
                               style={{
@@ -614,23 +632,25 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
                                 background: adminTab === "progress" ? "#fff" : "transparent",
                                 color: adminTab === "progress" ? "#0A0A0A" : "#64748B",
                                 boxShadow: adminTab === "progress" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                                display: "flex", alignItems: "center", gap: 5,
                               }}
-                            >📊 Progress</button>
+                            >
+                              <BarChart2 size={12} /> Progress
+                            </button>
                           </div>
-                          {/* Manual refresh */}
                           <button
                             onClick={loadBooks}
-                            style={{ height: 36, padding: "0 14px", background: "#F1F5F9", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#374151" }}
+                            style={{ height: 36, padding: "0 14px", background: "#F1F5F9", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#374151", display: "flex", alignItems: "center", gap: 6 }}
                             title="Refresh book statuses"
                           >
-                            ↻ Refresh
+                            <RefreshCw size={13} /> Refresh
                           </button>
                           {adminTab === "books" && (
                             <button
                               onClick={() => setShowUpload(true)}
-                              style={{ height: 36, padding: "0 16px", background: "#1D4ED8", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                              style={{ height: 36, padding: "0 16px", background: "#1D4ED8", color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
                             >
-                              + Upload PDF
+                              <Upload size={13} /> Upload PDF
                             </button>
                           )}
                         </div>
@@ -639,10 +659,10 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
                       {/* Books list */}
                       <div style={{ flex: 1, overflowY: "auto", padding: 24 }}>
                         {books.length === 0 && (
-                          <div style={{ textAlign: "center", paddingTop: 60, color: "#94A3B8" }}>
-                            <span style={{ fontSize: 40, display: "block", marginBottom: 12 }}>📄</span>
+                          <div style={{ textAlign: "center", paddingTop: 60, color: "#94A3B8", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+                            <FileText size={40} color="#CBD5E1" />
                             <p style={{ fontSize: 15, fontWeight: 600, color: "#374151" }}>No books yet</p>
-                            <p style={{ fontSize: 13, marginTop: 4 }}>Upload a PDF to add the first unit</p>
+                            <p style={{ fontSize: 13 }}>Upload a PDF to add the first unit</p>
                           </div>
                         )}
                         {books
@@ -661,9 +681,13 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
                                   width: 40, height: 40, borderRadius: 10,
                                   background: book.status === "ready" ? "#DBEAFE" : book.status === "failed" ? "#FEE2E2" : "#F1F5F9",
                                   display: "flex", alignItems: "center", justifyContent: "center",
-                                  fontSize: 18, flexShrink: 0,
+                                  flexShrink: 0,
                                 }}>
-                                  {book.status === "ready" ? "🔊" : book.status === "failed" ? "⚠️" : "⏳"}
+                                  {book.status === "ready"
+                                    ? <Volume2 size={18} color="#1D4ED8" />
+                                    : book.status === "failed"
+                                    ? <AlertTriangle size={18} color="#EF4444" />
+                                    : <Loader2 size={18} color="#94A3B8" style={{ animation: "spin 1s linear infinite" }} />}
                                 </div>
                                 <div>
                                   <p style={{ fontSize: 14, fontWeight: 600, color: "#0A0A0A" }}>
@@ -671,9 +695,9 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
                                   </p>
                                   <p style={{ fontSize: 12, color: "#94A3B8", marginTop: 2 }}>
                                     {book.author || "No author"} · {
-                                      book.status === "pending"     ? "Uploading…" :
-                                      book.status === "processing"  ? "Converting to audio…" :
-                                      book.status === "ready"       ? "Audio ready" :
+                                      book.status === "pending"    ? "Uploading…" :
+                                      book.status === "processing" ? "Converting to audio…" :
+                                      book.status === "ready"      ? "Audio ready" :
                                       "Processing failed"
                                     }
                                   </p>
@@ -681,7 +705,6 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
                               </div>
                               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                                 <StatusBadge status={book.status} />
-                                {/* Preview button — lets the admin verify audio before students use it */}
                                 {book.status === "ready" && book.audio_url && (
                                   <button
                                     onClick={() => router.push(
@@ -692,17 +715,20 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
                                       border: "1px solid #BFDBFE", borderRadius: 7,
                                       padding: "5px 12px", fontSize: 12, fontWeight: 600,
                                       cursor: "pointer", whiteSpace: "nowrap",
+                                      display: "flex", alignItems: "center", gap: 5,
                                     }}
                                     title="Preview audio"
                                   >
-                                    ▶ Preview
+                                    <Play size={11} /> Preview
                                   </button>
                                 )}
                                 <button
                                   onClick={() => deleteBook(book)}
-                                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#CBD5E1", padding: 0 }}
+                                  style={{ background: "none", border: "none", cursor: "pointer", color: "#CBD5E1", padding: 0, display: "flex", alignItems: "center" }}
                                   title="Delete book"
-                                >✕</button>
+                                >
+                                  <X size={16} />
+                                </button>
                               </div>
                             </div>
                           ))}
@@ -716,7 +742,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
         )}
       </main>
 
-      {/* ── Add Grade Modal ── */}
+      {/* Add Grade Modal */}
       {showAddGrade && (
         <Modal title="Add Grade" onClose={() => { setShowAddGrade(false); setError(""); }}>
           {error && <p style={{ color: "#EF4444", fontSize: 13, marginBottom: 12 }}>{error}</p>}
@@ -743,7 +769,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
         </Modal>
       )}
 
-      {/* ── Add Category Modal ── */}
+      {/* Add Category Modal */}
       {showAddCat && (
         <Modal title={`Add subject to ${selectedGrade?.name}`} onClose={() => { setShowAddCat(false); setError(""); }}>
           {error && <p style={{ color: "#EF4444", fontSize: 13, marginBottom: 12 }}>{error}</p>}
@@ -766,7 +792,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
         </Modal>
       )}
 
-      {/* ── Upload Book Modal ── */}
+      {/* Upload Book Modal */}
       {showUpload && (
         <Modal title={`Upload PDF to ${selectedCat?.name}`} onClose={() => { setShowUpload(false); setError(""); }}>
           {error && <p style={{ color: "#EF4444", fontSize: 13, marginBottom: 12 }}>{error}</p>}
@@ -786,10 +812,14 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
           >
             <input className="modal-input" id="pdf-upload" type="file" accept=".pdf" style={{ display: "none" }} onChange={e => setBookFile(e.target.files?.[0] ?? null)} />
             {bookFile ? (
-              <p style={{ fontSize: 13, fontWeight: 600, color: "#1D4ED8" }}>📄 {bookFile.name}</p>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#1D4ED8", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                <FileText size={14} /> {bookFile.name}
+              </p>
             ) : (
               <>
-                <p style={{ fontSize: 13, fontWeight: 600, color: "#1D4ED8" }}>Click to select PDF</p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: "#1D4ED8", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                  <Upload size={14} /> Click to select PDF
+                </p>
                 <p style={{ fontSize: 12, color: "#93C5FD", marginTop: 4 }}>Max 50MB</p>
               </>
             )}
@@ -824,14 +854,12 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
   const [selectedCat, setSelectedCat] = useState<Category | null>(null);
   const [books, setBooks] = useState<Book[]>([]);
 
-  // ── load categories on mount ───────────────────────────────
   useEffect(() => {
     fetch(`${API_BASE}/student/grades/${gradeID}/categories`, { headers: authHeaders(token) })
       .then(r => r.json())
       .then(d => setCategories(d.categories ?? []));
   }, [gradeID, token]);
 
-  // ── load books when category selected ─────────────────────
   const loadBooks = useCallback(async () => {
     if (!selectedCat) return;
     const res = await fetch(`${API_BASE}/student/categories/${selectedCat.id}/books`, { headers: authHeaders(token) });
@@ -849,7 +877,11 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
   return (
     <div style={{ display: "flex", height: "100vh", fontFamily: "'DM Sans', system-ui, sans-serif", background: "#F8FAFC" }}>
 
-      {/* ── Sidebar ── */}
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
+      `}</style>
+
+      {/* Sidebar */}
       <aside style={{ width: 240, background: "#fff", borderRight: "1px solid rgba(0,0,0,0.07)", display: "flex", flexDirection: "column", flexShrink: 0 }}>
         <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
           <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#0A0A0A" }}>
@@ -858,7 +890,6 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
           <p style={{ fontSize: 11, color: "#94A3B8", marginTop: 2, fontWeight: 500 }}>My Library</p>
         </div>
 
-        {/* Category list */}
         <div style={{ flex: 1, overflowY: "auto", padding: "12px 0" }}>
           <p style={{ fontSize: 10, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.1em", padding: "0 16px", marginBottom: 6 }}>
             Subjects
@@ -883,22 +914,21 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
           ))}
         </div>
 
-        {/* Sign out */}
         <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
           <button
             onClick={handleSignOut}
-            style={{ width: "100%", height: 36, background: "#F1F5F9", color: "#64748B", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+            style={{ width: "100%", height: 36, background: "#F1F5F9", color: "#64748B", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
           >
-            Sign out
+            <LogOut size={13} /> Sign out
           </button>
         </div>
       </aside>
 
-      {/* ── Main panel ── */}
+      {/* Main panel */}
       <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {!selectedCat ? (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#94A3B8" }}>
-            <span style={{ fontSize: 48, marginBottom: 16 }}>🎧</span>
+            <Headphones size={48} color="#CBD5E1" style={{ marginBottom: 16 }} />
             <p style={{ fontSize: 16, fontWeight: 600, color: "#374151" }}>Choose a subject to start listening</p>
             <p style={{ fontSize: 14, marginTop: 4 }}>Select a subject from the sidebar</p>
           </div>
@@ -919,17 +949,17 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
               </div>
               <button
                 onClick={loadBooks}
-                style={{ height: 36, padding: "0 14px", background: "#F1F5F9", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#374151" }}
+                style={{ height: 36, padding: "0 14px", background: "#F1F5F9", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#374151", display: "flex", alignItems: "center", gap: 6 }}
               >
-                ↻ Refresh
+                <RefreshCw size={13} /> Refresh
               </button>
             </div>
 
             {/* Books */}
             <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
               {books.length === 0 && (
-                <div style={{ textAlign: "center", paddingTop: 60, color: "#94A3B8" }}>
-                  <span style={{ fontSize: 40, display: "block", marginBottom: 12 }}>📚</span>
+                <div style={{ textAlign: "center", paddingTop: 60, color: "#94A3B8", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+                  <BookOpen size={40} color="#CBD5E1" />
                   <p style={{ fontSize: 15, fontWeight: 600, color: "#374151" }}>No books in this subject yet</p>
                 </div>
               )}
@@ -946,16 +976,17 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                      {/* Unit number badge */}
                       <div style={{
                         width: 44, height: 44, borderRadius: 11,
                         background: book.status === "ready" ? "#DBEAFE" : "#F1F5F9",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         flexShrink: 0,
                       }}>
-                        <span style={{ fontSize: book.status === "ready" ? 20 : 18 }}>
-                          {book.status === "ready" ? "🔊" : book.status === "failed" ? "⚠️" : "⏳"}
-                        </span>
+                        {book.status === "ready"
+                          ? <Volume2 size={20} color="#1D4ED8" />
+                          : book.status === "failed"
+                          ? <AlertTriangle size={18} color="#EF4444" />
+                          : <Loader2 size={18} color="#94A3B8" style={{ animation: "spin 1s linear infinite" }} />}
                       </div>
                       <div>
                         <p style={{ fontSize: 15, fontWeight: 700, color: "#0A0A0A" }}>
@@ -969,7 +1000,6 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
                       </div>
                     </div>
 
-                    {/* FROM DASHB — three action buttons when ready */}
                     {book.status === "ready" && book.audio_url ? (
                       <div style={{ display: "flex", flexDirection: "column", gap: 7, flexShrink: 0 }}>
                         <button
@@ -981,7 +1011,7 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
                             fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
                           }}
                         >
-                          ▶ Listen
+                          <Play size={11} /> Listen
                         </button>
                         <button
                           onClick={() => router.push(`/player?title=${encodeURIComponent(book.title)}&bookId=${book.id}&mode=dialogue`)}
@@ -992,7 +1022,7 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
                             fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
                           }}
                         >
-                          💬 Discussion
+                          <MessageSquare size={11} /> Discussion
                         </button>
                         <button
                           onClick={() => router.push(`/quiz?bookId=${book.id}&title=${encodeURIComponent(book.title)}`)}
@@ -1003,7 +1033,7 @@ function StudentDashboard({ token, gradeID, schoolID }: { token: string; gradeID
                             fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
                           }}
                         >
-                          ✏ Quiz
+                          <Pencil size={11} /> Quiz
                         </button>
                       </div>
                     ) : (
@@ -1039,7 +1069,6 @@ export default function DashboardPage() {
 
     const parsed = parseJWT(stored);
 
-    // Reject expired tokens immediately.
     if (!parsed || parsed.exp * 1000 < Date.now()) {
       localStorage.removeItem("amp_token");
       router.push("/login");
@@ -1052,8 +1081,6 @@ export default function DashboardPage() {
   }, [router]);
 
   if (!ready || !token || !payload) {
-    // Show nothing while we check the token — avoids a flash of content
-    // before the redirect fires if the token is missing or expired.
     return (
       <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', system-ui, sans-serif" }}>
         <p style={{ color: "#94A3B8", fontSize: 15 }}>Loading…</p>
@@ -1061,7 +1088,6 @@ export default function DashboardPage() {
     );
   }
 
-  // Route to the correct view based on the role in the JWT.
   if (payload.role === "admin") {
     return <AdminDashboard token={token} schoolID={payload.school_id} />;
   }
@@ -1070,7 +1096,6 @@ export default function DashboardPage() {
     return <StudentDashboard token={token} gradeID={payload.subject_id} schoolID={payload.school_id} />;
   }
 
-  // Unknown role — clear token and redirect.
   localStorage.removeItem("amp_token");
   router.push("/login");
   return null;

@@ -2,6 +2,21 @@
 
 import { useEffect, useRef, useState, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import {
+  ArrowLeft,
+  Headphones,
+  SkipBack,
+  SkipForward,
+  Play,
+  Pause,
+  Volume1,
+  Volume2,
+  VolumeX,
+  Loader2,
+  X,
+  MessageSquare,
+  BookOpen,
+} from "lucide-react";
 
 // =============================================================
 // TYPES
@@ -16,8 +31,6 @@ const SKIP_SECONDS = 15;
 // HELPERS
 // =============================================================
 
-// formatTime converts raw seconds to a human-readable string.
-// e.g. 125 → "2:05", 3723 → "1:02:03"
 function formatTime(seconds: number): string {
   if (!seconds || isNaN(seconds) || !isFinite(seconds)) return "0:00";
   const s = Math.floor(seconds);
@@ -32,7 +45,6 @@ function formatTime(seconds: number): string {
 // SUB-COMPONENTS
 // =============================================================
 
-// ── WaveformBars — animated bars that pulse when playing ─────
 function WaveformBars({ playing }: { playing: boolean }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 3, height: 32 }}>
@@ -53,7 +65,6 @@ function WaveformBars({ playing }: { playing: boolean }) {
   );
 }
 
-// ── ProgressBar — custom seekable bar ───────────────────────
 function ProgressBar({
   current,
   duration,
@@ -103,29 +114,21 @@ function ProgressBar({
       style={{
         height: 6, background: "#E2E8F0", borderRadius: 3,
         cursor: "pointer", position: "relative",
-        // Larger hit area without making the bar visually tall
         padding: "8px 0", margin: "-8px 0",
       }}
     >
-      {/* Track */}
       <div style={{ position: "absolute", inset: "8px 0", background: "#E2E8F0", borderRadius: 3 }} />
-
-      {/* Hover preview — lighter fill */}
       {hoverPct !== null && (
         <div style={{
           position: "absolute", top: 8, left: 0, bottom: 8,
           width: `${hoverPct}%`, background: "#93C5FD", borderRadius: 3, opacity: 0.5,
         }} />
       )}
-
-      {/* Progress fill */}
       <div style={{
         position: "absolute", top: 8, left: 0, bottom: 8,
         width: `${pct}%`, background: "#1D4ED8", borderRadius: 3,
         transition: dragging ? "none" : "width 0.25s linear",
       }} />
-
-      {/* Thumb */}
       <div style={{
         position: "absolute",
         top: "50%", left: `${pct}%`,
@@ -145,9 +148,6 @@ function ProgressBar({
 // PLAYER PAGE
 // =============================================================
 
-// PlayerContent is the actual player — kept separate so it can be
-// wrapped in Suspense below. Next.js App Router requires any component
-// that calls useSearchParams() to be inside a Suspense boundary.
 function PlayerContent() {
   const router      = useRouter();
   const searchParams = useSearchParams();
@@ -157,9 +157,6 @@ function PlayerContent() {
   const bookId   = searchParams.get("bookId")   ?? "";
   const audioUrl = searchParams.get("audioUrl") ? decodeURIComponent(searchParams.get("audioUrl")!) : null;
 
-  // For dialogue mode the audio URL is fetched from the API using the
-  // bookId — the student dashboard passes bookId instead of a direct URL
-  // because the presigned URL must be generated server-side.
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(audioUrl);
 
   useEffect(() => {
@@ -178,21 +175,18 @@ function PlayerContent() {
       .catch(() => setState("error"));
   }, [mode, bookId]);
 
-  const audioRef           = useRef<HTMLAudioElement | null>(null);
-  const [state, setState]  = useState<PlayerState>("loading");
+  const audioRef              = useRef<HTMLAudioElement | null>(null);
+  const [state, setState]     = useState<PlayerState>("loading");
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [speedIdx, setSpeedIdx] = useState(2); // default 1×
-  const [volume, setVolume]    = useState(1);
-  const [muted, setMuted]      = useState(false);
+  const [speedIdx, setSpeedIdx] = useState(2);
+  const [volume, setVolume]     = useState(1);
+  const [muted, setMuted]       = useState(false);
 
   const speed = SPEEDS[speedIdx];
 
-  // ── initialise audio element ──────────────────────────────
   useEffect(() => {
     if (!resolvedUrl) {
-      // For dialogue mode resolvedUrl starts null and is set by the
-      // fetch above — don't treat null as an error until the fetch completes.
       if (mode === "dialogue" && bookId) return;
       setState("error");
       return;
@@ -202,10 +196,10 @@ function PlayerContent() {
     audioRef.current = audio;
 
     audio.preload    = "metadata";
-    audio.playbackRate = SPEEDS[2]; // 1×
+    audio.playbackRate = SPEEDS[2];
 
-    const onCanPlay  = () => setState("ready");
-    const onError    = () => setState("error");
+    const onCanPlay    = () => setState("ready");
+    const onError      = () => setState("error");
     const onTimeUpdate = () => setCurrent(audio.currentTime);
     const onDuration   = () => setDuration(audio.duration);
     const onEnded      = () => setState("paused");
@@ -227,12 +221,10 @@ function PlayerContent() {
     };
   }, [resolvedUrl]);
 
-  // ── sync playback rate ────────────────────────────────────
   useEffect(() => {
     if (audioRef.current) audioRef.current.playbackRate = speed;
   }, [speed]);
 
-  // ── sync volume / mute ────────────────────────────────────
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
@@ -240,7 +232,6 @@ function PlayerContent() {
     }
   }, [volume, muted]);
 
-  // ── controls ──────────────────────────────────────────────
   const togglePlay = useCallback(() => {
     const a = audioRef.current;
     if (!a || state === "loading" || state === "error") return;
@@ -268,28 +259,23 @@ function PlayerContent() {
     setSpeedIdx(i => (i + 1) % SPEEDS.length);
   }, []);
 
-  // ── keyboard shortcuts ────────────────────────────────────
-  // Space = play/pause, ← = skip back, → = skip forward,
-  // [ = slower, ] = faster. These let a teacher or student
-  // control playback without reaching for the mouse.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      // Don't fire on inputs
       if (e.target instanceof HTMLInputElement) return;
-      if (e.code === "Space")       { e.preventDefault(); togglePlay(); }
-      if (e.code === "ArrowLeft")   { e.preventDefault(); skip(-SKIP_SECONDS); }
-      if (e.code === "ArrowRight")  { e.preventDefault(); skip(SKIP_SECONDS); }
-      if (e.code === "BracketLeft") setSpeedIdx(i => Math.max(0, i - 1));
+      if (e.code === "Space")        { e.preventDefault(); togglePlay(); }
+      if (e.code === "ArrowLeft")    { e.preventDefault(); skip(-SKIP_SECONDS); }
+      if (e.code === "ArrowRight")   { e.preventDefault(); skip(SKIP_SECONDS); }
+      if (e.code === "BracketLeft")  setSpeedIdx(i => Math.max(0, i - 1));
       if (e.code === "BracketRight") setSpeedIdx(i => Math.min(SPEEDS.length - 1, i + 1));
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [togglePlay, skip]);
 
-  const remaining  = duration - current;
-  const isPlaying  = state === "playing";
-  const isLoading  = state === "loading";
-  const isError    = state === "error";
+  const remaining = duration - current;
+  const isPlaying = state === "playing";
+  const isLoading = state === "loading";
+  const isError   = state === "error";
 
   return (
     <div style={{
@@ -302,34 +288,27 @@ function PlayerContent() {
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display&display=swap');
-
-        /* Waveform bar animations — four offset phases */
         @keyframes wave-0 { from { height: 8px  } to { height: 28px } }
         @keyframes wave-1 { from { height: 14px } to { height: 22px } }
         @keyframes wave-2 { from { height: 10px } to { height: 26px } }
         @keyframes wave-3 { from { height: 18px } to { height: 12px } }
-
-        /* Play button pulse when playing */
         @keyframes pulse-ring {
           0%   { transform: scale(1);   opacity: 0.35; }
           100% { transform: scale(1.18); opacity: 0; }
         }
+        @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
         .pulse-ring {
           position: absolute; inset: -6px; border-radius: 50%;
           border: 2px solid #1D4ED8;
           animation: pulse-ring 1.4s ease-out infinite;
           pointer-events: none;
         }
-
-        /* Control button hover */
         .ctrl-btn:hover { background: #EFF6FF !important; }
         .ctrl-btn:active { transform: scale(0.95); }
-
-        /* Speed pill hover */
         .speed-btn:hover { background: #DBEAFE !important; }
       `}</style>
 
-      {/* ── Top bar ── */}
+      {/* Top bar */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "14px 24px",
@@ -344,15 +323,15 @@ function PlayerContent() {
             fontSize: 14, fontWeight: 600, color: "#64748B",
           }}
         >
-          ← Back
+          <ArrowLeft size={16} /> Back
         </button>
         <span style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#0A0A0A" }}>
           Amp<span style={{ color: "#1D4ED8" }}>.</span>
         </span>
-        <div style={{ width: 60 }} /> {/* spacer to centre logo */}
+        <div style={{ width: 60 }} />
       </div>
 
-      {/* ── Player card ── */}
+      {/* Player card */}
       <div style={{
         flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
         padding: 24,
@@ -367,7 +346,7 @@ function PlayerContent() {
           maxWidth: 480,
         }}>
 
-          {/* ── Album art / visualiser ── */}
+          {/* Album art / visualiser */}
           <div style={{
             width: 160, height: 160, borderRadius: "50%",
             background: "linear-gradient(135deg, #DBEAFE 0%, #EFF6FF 100%)",
@@ -378,7 +357,7 @@ function PlayerContent() {
             position: "relative",
           }}>
             {isPlaying && <div className="pulse-ring" />}
-            <span style={{ fontSize: 52 }}>🎧</span>
+            <Headphones size={52} color="#1D4ED8" strokeWidth={1.5} />
             <div style={{ marginTop: 8 }}>
               <WaveformBars playing={isPlaying} />
             </div>
@@ -395,16 +374,18 @@ function PlayerContent() {
             }}>
               {title}
             </h1>
-            {/* Mode label — tells the student which version they are listening to */}
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 6 }}>
               <span style={{
+                display: "flex", alignItems: "center", gap: 5,
                 fontSize: 11, fontWeight: 700,
                 padding: "3px 10px", borderRadius: 6,
                 background: mode === "dialogue" ? "#F3E8FF" : "#DBEAFE",
                 color: mode === "dialogue" ? "#7C3AED" : "#1D4ED8",
                 textTransform: "uppercase", letterSpacing: "0.08em",
               }}>
-                {mode === "dialogue" ? "💬 Teaching discussion" : "▶ Standard lesson"}
+                {mode === "dialogue"
+                  ? <><MessageSquare size={11} /> Teaching discussion</>
+                  : <><BookOpen size={11} /> Standard lesson</>}
               </span>
             </div>
             <p style={{ fontSize: 13, color: "#94A3B8" }}>
@@ -414,7 +395,7 @@ function PlayerContent() {
             </p>
           </div>
 
-          {/* ── Progress bar ── */}
+          {/* Progress bar */}
           <div style={{ marginBottom: 8 }}>
             <ProgressBar current={current} duration={duration} onSeek={seek} />
           </div>
@@ -423,7 +404,7 @@ function PlayerContent() {
             <span>{formatTime(duration)}</span>
           </div>
 
-          {/* ── Controls ── */}
+          {/* Controls */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, marginBottom: 28 }}>
 
             {/* Speed pill */}
@@ -458,7 +439,7 @@ function PlayerContent() {
               }}
               title="Skip back 15s (← key)"
             >
-              <span style={{ fontSize: 18 }}>⏮</span>
+              <SkipBack size={18} />
               <span style={{ fontSize: 9, color: "#94A3B8", fontWeight: 600 }}>15s</span>
             </button>
 
@@ -479,7 +460,13 @@ function PlayerContent() {
                 }}
                 title="Play / Pause (Space)"
               >
-                {isLoading ? "⏳" : isError ? "✕" : isPlaying ? "⏸" : "▶"}
+                {isLoading
+                  ? <Loader2 size={26} style={{ animation: "spin 1s linear infinite" }} />
+                  : isError
+                  ? <X size={26} />
+                  : isPlaying
+                  ? <Pause size={26} />
+                  : <Play size={26} />}
               </button>
             </div>
 
@@ -498,7 +485,7 @@ function PlayerContent() {
               }}
               title="Skip forward 15s (→ key)"
             >
-              <span style={{ fontSize: 18 }}>⏭</span>
+              <SkipForward size={18} />
               <span style={{ fontSize: 9, color: "#94A3B8", fontWeight: 600 }}>15s</span>
             </button>
 
@@ -511,28 +498,29 @@ function PlayerContent() {
                 background: muted ? "#FEE2E2" : "#EFF6FF",
                 color: muted ? "#DC2626" : "#1D4ED8",
                 border: "none", borderRadius: 8,
-                fontSize: 16, cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer",
                 transition: "background 0.15s",
               }}
               title="Mute / unmute"
             >
-              {muted ? "🔇" : "🔊"}
+              {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
             </button>
           </div>
 
-          {/* ── Volume slider ── */}
+          {/* Volume slider */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
-            <span style={{ fontSize: 14 }}>🔉</span>
+            <Volume1 size={16} color="#94A3B8" />
             <input
               type="range" min={0} max={1} step={0.05}
               value={muted ? 0 : volume}
               onChange={e => { setVolume(Number(e.target.value)); if (muted) setMuted(false); }}
               style={{ flex: 1, accentColor: "#1D4ED8", height: 4, cursor: "pointer" }}
             />
-            <span style={{ fontSize: 14 }}>🔊</span>
+            <Volume2 size={16} color="#94A3B8" />
           </div>
 
-          {/* ── Keyboard shortcut hint ── */}
+          {/* Keyboard shortcut hint */}
           <div style={{
             background: "#F8FAFC", borderRadius: 10,
             padding: "12px 16px",
@@ -560,10 +548,6 @@ function PlayerContent() {
   );
 }
 
-// Default export wraps PlayerContent in Suspense.
-// Without this, Next.js App Router throws an error at build time
-// because useSearchParams() requires a Suspense boundary — it
-// suspends rendering until the URL search params are available.
 export default function PlayerPage() {
   return (
     <Suspense fallback={
