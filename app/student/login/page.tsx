@@ -3,11 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Volume2, MessageSquare, PenLine, Headphones, AlertCircle } from "lucide-react";
 
 interface StudentLoginForm {
-  schoolID:  string;
-  username:  string;
-  password:  string;
+  schoolID: string;
+  username: string;
+  password: string;
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
@@ -75,6 +76,7 @@ export default function StudentLoginPage() {
           font-family: 'DM Sans', system-ui, sans-serif; cursor: pointer;
           transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
           box-shadow: 0 4px 16px rgba(29,78,216,0.3); letter-spacing: 0.01em;
+          display: flex; align-items: center; justify-content: center; gap: 10px;
         }
         .submit-btn:hover:not(:disabled) { background: #1E40AF; box-shadow: 0 6px 20px rgba(29,78,216,0.4); }
         .submit-btn:active:not(:disabled) { transform: scale(0.99); }
@@ -107,15 +109,9 @@ export default function StudentLoginPage() {
           margin-bottom: 8px; width: fit-content;
         }
         .helper-text { font-size: 11px; color: #94A3B8; margin-top: 5px; line-height: 1.5; }
-        @media (max-width: 768px) {
-          .left-panel  { display: none !important; }
-          .right-panel { grid-column: 1 / -1 !important; }
-        }
+        @media (max-width: 768px) { .left-panel { display: none !important; } .right-panel { grid-column: 1 / -1 !important; } }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .spinner {
-          width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3);
-          border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block;
-        }
+        .spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
       `}</style>
 
       {/* ── LEFT PANEL ── */}
@@ -131,8 +127,10 @@ export default function StudentLoginPage() {
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "40px 0", position: "relative", zIndex: 1 }}>
 
+          {/* Badge */}
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(96,165,250,0.15)", border: "1px solid rgba(96,165,250,0.25)", borderRadius: 100, padding: "6px 14px", fontSize: 12, fontWeight: 600, color: "#93C5FD", marginBottom: 24, width: "fit-content" }}>
-            🎧 Student Library Access
+            <Headphones size={13} color="#93C5FD" />
+            Student Library Access
           </div>
 
           <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontWeight: 400, color: "#fff", lineHeight: 1.2, letterSpacing: "-0.025em", marginBottom: 12 }}>
@@ -147,25 +145,34 @@ export default function StudentLoginPage() {
           {/* Three format pills */}
           <div className="format-pill">
             <div className="format-dot" style={{ background: "#FBBF24" }} />
-            <div>
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#E2E8F0" }}>🔊 Audio Lesson</p>
-              <p style={{ fontSize: 11, color: "#64748B", marginTop: 2 }}>The full unit read aloud — follow along with your class</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
+              <Volume2 size={14} color="#FBBF24" style={{ flexShrink: 0 }} />
+              <div>
+                <p style={{ fontSize: 12, fontWeight: 700, color: "#E2E8F0" }}>Audio Lesson</p>
+                <p style={{ fontSize: 11, color: "#64748B", marginTop: 2 }}>The full unit read aloud — follow along with your class</p>
+              </div>
             </div>
           </div>
 
           <div className="format-pill">
             <div className="format-dot" style={{ background: "#60A5FA" }} />
-            <div>
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#E2E8F0" }}>💬 Teaching Dialogue</p>
-              <p style={{ fontSize: 11, color: "#64748B", marginTop: 2 }}>Two voices discuss the topic — helps you understand the why</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
+              <MessageSquare size={14} color="#60A5FA" style={{ flexShrink: 0 }} />
+              <div>
+                <p style={{ fontSize: 12, fontWeight: 700, color: "#E2E8F0" }}>Teaching Dialogue</p>
+                <p style={{ fontSize: 11, color: "#64748B", marginTop: 2 }}>Two voices discuss the topic — helps you understand the why</p>
+              </div>
             </div>
           </div>
 
           <div className="format-pill">
             <div className="format-dot" style={{ background: "#34D399" }} />
-            <div>
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#E2E8F0" }}>✏️ Quiz</p>
-              <p style={{ fontSize: 11, color: "#64748B", marginTop: 2 }}>Questions read aloud — press 1, 2, 3, or 4 to answer</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
+              <PenLine size={14} color="#34D399" style={{ flexShrink: 0 }} />
+              <div>
+                <p style={{ fontSize: 12, fontWeight: 700, color: "#E2E8F0" }}>Quiz</p>
+                <p style={{ fontSize: 11, color: "#64748B", marginTop: 2 }}>Questions read aloud — press 1, 2, 3, or 4 to answer</p>
+              </div>
             </div>
           </div>
 
@@ -231,7 +238,7 @@ export default function StudentLoginPage() {
 
           {error && (
             <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 10, padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "flex-start", gap: 10 }}>
-              <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
+              <AlertCircle size={16} color="#B91C1C" style={{ flexShrink: 0, marginTop: 1 }} />
               <p style={{ fontSize: 13, color: "#B91C1C", lineHeight: 1.5 }}>{error}</p>
             </div>
           )}
@@ -240,27 +247,46 @@ export default function StudentLoginPage() {
 
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>School ID</label>
-              <input className={`auth-input ${error ? "err" : ""}`} type="text" name="schoolID" value={form.schoolID} onChange={handleChange} placeholder="Ask your teacher for this" autoComplete="off" autoCapitalize="off" spellCheck={false} />
+              <input
+                className={`auth-input ${error ? "err" : ""}`}
+                type="text" name="schoolID" value={form.schoolID} onChange={handleChange}
+                placeholder="Ask your teacher for this"
+                autoComplete="off" autoCapitalize="off" spellCheck={false}
+              />
               <p className="helper-text">Your teacher has this — it looks like a long string of letters and numbers</p>
             </div>
 
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Grade username</label>
-              <input className={`auth-input ${error ? "err" : ""}`} type="text" name="username" value={form.username} onChange={handleChange} placeholder='e.g. grade3' autoComplete="username" autoCapitalize="off" spellCheck={false} />
+              <input
+                className={`auth-input ${error ? "err" : ""}`}
+                type="text" name="username" value={form.username} onChange={handleChange}
+                placeholder="e.g. grade3"
+                autoComplete="username" autoCapitalize="off" spellCheck={false}
+              />
             </div>
 
             <div style={{ marginBottom: 28 }}>
               <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Password</label>
               <div style={{ position: "relative" }}>
-                <input className={`auth-input ${error ? "err" : ""}`} type={showPass ? "text" : "password"} name="password" value={form.password} onChange={handleChange} placeholder="Enter your password" autoComplete="current-password" style={{ paddingRight: 44 }} />
-                <button type="button" onClick={() => setShowPass(p => !p)} style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#94A3B8", padding: 0 }} aria-label={showPass ? "Hide password" : "Show password"} />
+                <input
+                  className={`auth-input ${error ? "err" : ""}`}
+                  type={showPass ? "text" : "password"} name="password" value={form.password} onChange={handleChange}
+                  placeholder="Enter your password"
+                  autoComplete="current-password" style={{ paddingRight: 44 }}
+                />
+                <button
+                  type="button" onClick={() => setShowPass(p => !p)}
+                  style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#94A3B8", padding: 0 }}
+                  aria-label={showPass ? "Hide password" : "Show password"}
+                />
               </div>
             </div>
 
             <button className="submit-btn" type="submit" disabled={loading}>
               {loading
-                ? <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}><span className="spinner" /> Signing in…</span>
-                : "Sign in to my library 🎧"}
+                ? <><span className="spinner" /> Signing in…</>
+                : <><Headphones size={18} /> Sign in to my library</>}
             </button>
           </form>
 

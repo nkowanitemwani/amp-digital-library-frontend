@@ -3,22 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Volume2, MessageSquare, PenLine, AlertCircle } from "lucide-react";
 
 interface RegisterForm {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  location: string;
+  name: string; email: string; password: string; confirmPassword: string; location: string;
 }
-
 type FormErrors = Partial<Record<keyof RegisterForm, string>>;
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 export default function RegisterPage() {
   const router = useRouter();
-
   const [form, setForm]         = useState<RegisterForm>({ name: "", email: "", password: "", confirmPassword: "", location: "" });
   const [errors, setErrors]     = useState<FormErrors>({});
   const [apiError, setApiError] = useState("");
@@ -45,26 +40,14 @@ export default function RegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
-    setLoading(true);
-    setApiError("");
+    setLoading(true); setApiError("");
     try {
-      const res  = await fetch(`${API_BASE}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: form.name.trim(), email: form.email.trim(), password: form.password, location: form.location.trim() }),
-      });
+      const res  = await fetch(`${API_BASE}/auth/register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: form.name.trim(), email: form.email.trim(), password: form.password, location: form.location.trim() }) });
       const data = await res.json();
-      if (!res.ok) {
-        if (res.status === 409) setApiError("An account with this email already exists. Did you mean to sign in?");
-        else setApiError(data.error ?? "Registration failed. Please try again.");
-        return;
-      }
+      if (!res.ok) { setApiError(res.status === 409 ? "An account with this email already exists. Did you mean to sign in?" : data.error ?? "Registration failed. Please try again."); return; }
       router.push("/login?registered=true");
-    } catch {
-      setApiError("Could not reach the server. Please check your connection.");
-    } finally {
-      setLoading(false);
-    }
+    } catch { setApiError("Could not reach the server. Please check your connection."); }
+    finally { setLoading(false); }
   }
 
   function passwordStrength(p: string): { label: string; color: string; width: string } {
@@ -81,54 +64,22 @@ export default function RegisterPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        .auth-input {
-          width: 100%; height: 48px; border: 1.5px solid rgba(0,0,0,0.12); border-radius: 10px;
-          padding: 0 14px; font-size: 14px; font-family: 'DM Sans', system-ui, sans-serif;
-          color: #0A0A0A; background: #fff; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
-        }
+        .auth-input { width: 100%; height: 48px; border: 1.5px solid rgba(0,0,0,0.12); border-radius: 10px; padding: 0 14px; font-size: 14px; font-family: 'DM Sans', system-ui, sans-serif; color: #0A0A0A; background: #fff; outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
         .auth-input:focus { border-color: #1D4ED8; box-shadow: 0 0 0 3px rgba(29,78,216,0.1); }
         .auth-input.err  { border-color: #EF4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.08); }
         .auth-input::placeholder { color: #94A3B8; }
-        .submit-btn {
-          width: 100%; height: 48px; border: none; border-radius: 10px;
-          background: #1D4ED8; color: #fff; font-size: 15px; font-weight: 700;
-          font-family: 'DM Sans', system-ui, sans-serif; cursor: pointer;
-          transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
-          box-shadow: 0 4px 16px rgba(29,78,216,0.3);
-        }
+        .submit-btn { width: 100%; height: 48px; border: none; border-radius: 10px; background: #1D4ED8; color: #fff; font-size: 15px; font-weight: 700; font-family: 'DM Sans', system-ui, sans-serif; cursor: pointer; transition: background 0.15s, transform 0.1s, box-shadow 0.15s; box-shadow: 0 4px 16px rgba(29,78,216,0.3); }
         .submit-btn:hover:not(:disabled) { background: #1E40AF; }
         .submit-btn:active:not(:disabled) { transform: scale(0.99); }
         .submit-btn:disabled { opacity: 0.65; cursor: not-allowed; }
-        .field-err { font-size: 12px; color: #EF4444; margin-top: 5px; }
-        .left-panel {
-          background:
-            radial-gradient(ellipse 70% 50% at 15% 10%, rgba(219,234,254,0.85) 0%, transparent 55%),
-            radial-gradient(ellipse 60% 40% at 85% 85%, rgba(254,215,170,0.60) 0%, transparent 55%),
-            radial-gradient(ellipse 50% 60% at 50% 50%, rgba(220,252,231,0.30) 0%, transparent 60%),
-            #F8FAFF;
-          padding: 48px; display: flex; flex-direction: column;
-        }
-        .feature-block {
-          border-radius: 14px; padding: 18px 20px; margin-bottom: 12px;
-          border: 1px solid rgba(0,0,0,0.06);
-        }
-        .feature-block-header {
-          display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
-        }
-        .feature-num {
-          width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 11px; font-weight: 800;
-        }
-        @media (max-width: 768px) {
-          .left-panel  { display: none !important; }
-          .right-panel { grid-column: 1 / -1 !important; }
-        }
+        .field-err { font-size: 12px; color: #EF4444; margin-top: 5px; display: flex; align-items: center; gap: 4px; }
+        .left-panel { background: radial-gradient(ellipse 70% 50% at 15% 10%, rgba(219,234,254,0.85) 0%, transparent 55%), radial-gradient(ellipse 60% 40% at 85% 85%, rgba(254,215,170,0.60) 0%, transparent 55%), radial-gradient(ellipse 50% 60% at 50% 50%, rgba(220,252,231,0.30) 0%, transparent 60%), #F8FAFF; padding: 48px; display: flex; flex-direction: column; }
+        .feature-block { border-radius: 14px; padding: 18px 20px; margin-bottom: 12px; border: 1px solid rgba(0,0,0,0.06); }
+        .feature-block-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .feature-num { width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
+        @media (max-width: 768px) { .left-panel { display: none !important; } .right-panel { grid-column: 1 / -1 !important; } }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .spinner {
-          width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
-          border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block;
-        }
+        .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
       `}</style>
 
       {/* ── LEFT PANEL ── */}
@@ -142,23 +93,24 @@ export default function RegisterPage() {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", padding: "36px 0" }}>
 
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 100, padding: "6px 14px", fontSize: 12, fontWeight: 600, color: "#1D4ED8", marginBottom: 20, width: "fit-content" }}>
-            ♿ Free for all schools
+            Free for all schools
           </div>
 
           <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: "clamp(1.8rem, 3vw, 2.5rem)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.025em", marginBottom: 10, color: "#0A0A0A" }}>
-            One PDF.<br />Three learning<br />
-            <em style={{ color: "#1D4ED8" }}>experiences.</em>
+            One PDF.<br />Three learning<br /><em style={{ color: "#1D4ED8" }}>experiences.</em>
           </h2>
 
           <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.7, marginBottom: 24, maxWidth: 330 }}>
             Register your school and upload your first textbook. Amplify automatically creates all three formats — no extra steps.
           </p>
 
-          {/* Three feature blocks */}
           <div className="feature-block" style={{ background: "#FFFBF5", borderColor: "#FEF3C7" }}>
             <div className="feature-block-header">
               <div className="feature-num" style={{ background: "#FEF3C7", color: "#D97706" }}>1</div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: "#0A0A0A" }}>🔊 Audio Lesson</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <Volume2 size={14} color="#D97706" />
+                <p style={{ fontSize: 13, fontWeight: 700, color: "#0A0A0A" }}>Audio Lesson</p>
+              </div>
             </div>
             <p style={{ fontSize: 12, color: "#64748B", lineHeight: 1.55, paddingLeft: 32 }}>
               The full unit narrated by a clear AI voice. Students listen as you play it in the computer lab — no reading required.
@@ -168,7 +120,10 @@ export default function RegisterPage() {
           <div className="feature-block" style={{ background: "#F0F9FF", borderColor: "#DBEAFE" }}>
             <div className="feature-block-header">
               <div className="feature-num" style={{ background: "#DBEAFE", color: "#1D4ED8" }}>2</div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: "#0A0A0A" }}>💬 Teaching Dialogue</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <MessageSquare size={14} color="#1D4ED8" />
+                <p style={{ fontSize: 13, fontWeight: 700, color: "#0A0A0A" }}>Teaching Dialogue</p>
+              </div>
             </div>
             <p style={{ fontSize: 12, color: "#64748B", lineHeight: 1.55, paddingLeft: 32 }}>
               Two AI voices — one explains, one questions. A Socratic discussion of the unit that brings concepts to life.
@@ -178,14 +133,16 @@ export default function RegisterPage() {
           <div className="feature-block" style={{ background: "#F0FDF4", borderColor: "#D1FAE5" }}>
             <div className="feature-block-header">
               <div className="feature-num" style={{ background: "#D1FAE5", color: "#15803D" }}>3</div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: "#0A0A0A" }}>✏️ Spoken Quiz</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <PenLine size={14} color="#15803D" />
+                <p style={{ fontSize: 13, fontWeight: 700, color: "#0A0A0A" }}>Spoken Quiz</p>
+              </div>
             </div>
             <p style={{ fontSize: 12, color: "#64748B", lineHeight: 1.55, paddingLeft: 32 }}>
               Five comprehension questions, read aloud automatically. Students answer with 1–4 on the keyboard. Instant results.
             </p>
           </div>
 
-          {/* Impact stat */}
           <div style={{ background: "rgba(255,255,255,0.7)", border: "1px solid rgba(0,0,0,0.07)", borderRadius: 14, padding: "16px 18px", marginTop: 4, backdropFilter: "blur(8px)" }}>
             <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: "2.2rem", color: "#1D4ED8", fontWeight: 400, lineHeight: 1 }}>1 in 4</p>
             <p style={{ fontSize: 12, color: "#64748B", lineHeight: 1.6, marginTop: 6 }}>
@@ -203,42 +160,33 @@ export default function RegisterPage() {
       {/* ── RIGHT PANEL ── */}
       <div className="right-panel" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 32px", background: "#fff", overflowY: "auto" }}>
         <div style={{ width: "100%", maxWidth: 420 }}>
-
           <div style={{ marginBottom: 32 }}>
-            <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 34, fontWeight: 400, letterSpacing: "-0.025em", color: "#0A0A0A", marginBottom: 8 }}>
-              Register your school.
-            </h1>
+            <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 34, fontWeight: 400, letterSpacing: "-0.025em", color: "#0A0A0A", marginBottom: 8 }}>Register your school.</h1>
             <p style={{ fontSize: 15, color: "#64748B" }}>Set up your library in under two minutes.</p>
           </div>
 
           {apiError && (
             <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 10, padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "flex-start", gap: 10 }}>
-              <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
+              <AlertCircle size={16} color="#B91C1C" style={{ flexShrink: 0, marginTop: 1 }} />
               <p style={{ fontSize: 13, color: "#B91C1C", lineHeight: 1.5 }}>{apiError}</p>
             </div>
           )}
 
           <form onSubmit={handleSubmit} noValidate>
-
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>School name <span style={{ color: "#EF4444" }}>*</span></label>
               <input className={`auth-input ${errors.name ? "err" : ""}`} type="text" name="name" value={form.name} onChange={handleChange} placeholder="e.g. Kabulonga Secondary School" autoComplete="organization" />
-              {errors.name && <p className="field-err">⚠ {errors.name}</p>}
+              {errors.name && <p className="field-err"><AlertCircle size={11} /> {errors.name}</p>}
             </div>
-
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Email address <span style={{ color: "#EF4444" }}>*</span></label>
               <input className={`auth-input ${errors.email ? "err" : ""}`} type="email" name="email" value={form.email} onChange={handleChange} placeholder="admin@yourschool.edu" autoComplete="email" />
-              {errors.email && <p className="field-err">⚠ {errors.email}</p>}
+              {errors.email && <p className="field-err"><AlertCircle size={11} /> {errors.email}</p>}
             </div>
-
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
-                Location <span style={{ fontSize: 12, color: "#94A3B8", fontWeight: 400 }}>(optional)</span>
-              </label>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Location <span style={{ fontSize: 12, color: "#94A3B8", fontWeight: 400 }}>(optional)</span></label>
               <input className="auth-input" type="text" name="location" value={form.location} onChange={handleChange} placeholder="e.g. Lusaka, Zambia" autoComplete="address-level2" />
             </div>
-
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Password <span style={{ color: "#EF4444" }}>*</span></label>
               <div style={{ position: "relative" }}>
@@ -253,19 +201,15 @@ export default function RegisterPage() {
                   <span style={{ fontSize: 11, color: strength.color, fontWeight: 600 }}>{strength.label}</span>
                 </div>
               )}
-              {errors.password && <p className="field-err">⚠ {errors.password}</p>}
+              {errors.password && <p className="field-err"><AlertCircle size={11} /> {errors.password}</p>}
             </div>
-
             <div style={{ marginBottom: 28 }}>
               <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>Confirm password <span style={{ color: "#EF4444" }}>*</span></label>
               <input className={`auth-input ${errors.confirmPassword ? "err" : ""}`} type={showPass ? "text" : "password"} name="confirmPassword" value={form.confirmPassword} onChange={handleChange} placeholder="Repeat your password" autoComplete="new-password" />
-              {errors.confirmPassword && <p className="field-err">⚠ {errors.confirmPassword}</p>}
+              {errors.confirmPassword && <p className="field-err"><AlertCircle size={11} /> {errors.confirmPassword}</p>}
             </div>
-
             <button className="submit-btn" type="submit" disabled={loading}>
-              {loading
-                ? <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}><span className="spinner" /> Creating your library…</span>
-                : "Create my school library →"}
+              {loading ? <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}><span className="spinner" /> Creating your library…</span> : "Create my school library →"}
             </button>
           </form>
 
