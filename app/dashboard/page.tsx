@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -188,6 +188,7 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError]           = useState("");
+  const pollRef = useRef<NodeJS.Timeout | null>(null);
 
   const loadGrades = useCallback(async () => {
     const res = await fetch(`${API_BASE}/admin/grades`, { headers: authHeaders(token) });
@@ -209,17 +210,44 @@ function AdminDashboard({ token, schoolID }: { token: string; schoolID: string }
       .then(d => { setCategories(d.categories ?? []); setSelectedCat(null); setBooks([]); });
   }, [selectedGrade, token]);
 
-  const loadBooks = useCallback(async () => {
-    if (!selectedCat || !selectedGrade) return;
-    const res = await fetch(
-      `${API_BASE}/admin/categories/${selectedCat.id}/books?grade_id=${selectedGrade.id}`,
-      { headers: authHeaders(token) }
-    );
-    const data = await res.json();
-    if (res.ok) setBooks(data.books ?? []);
-  }, [selectedCat, selectedGrade, token]);
+const loadBooks = useCallback(async () => {
+  if (!selectedCat || !selectedGrade) return;
+  const res = await fetch(
+    `${API_BASE}/admin/categories/${selectedCat.id}/books?grade_id=${selectedGrade.id}`,
+    { headers: authHeaders(token) }
+  );
+  const data = await res.json();
+  if (!res.ok) return;
 
-  useEffect(() => { loadBooks(); }, [loadBooks]);
+  const fetched: Book[] = data.books ?? [];
+  setBooks(fetched);
+
+  const stillProcessing = fetched.some(
+    b => b.status === "pending" || b.status === "processing"
+  );
+
+  if (stillProcessing) {
+    
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = setInterval(loadBooks, 10000); 
+  } else {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  }
+}, [selectedCat, selectedGrade, token]);
+
+useEffect(() => { loadBooks(); }, [loadBooks]);
+
+useEffect(() => {
+  return () => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  };
+}, [selectedCat?.id, selectedGrade?.id]);
 
   const loadProgress = useCallback(async () => {
     if (!selectedGrade) return;
