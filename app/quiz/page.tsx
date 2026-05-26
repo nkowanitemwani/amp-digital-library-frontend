@@ -58,7 +58,6 @@ function QuizContent() {
   const [selectedKey, setSelectedKey] = useState<number | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const preview = params.get("preview") === "true";
 
   useEffect(() => {
     const stored = localStorage.getItem("amp_token");
@@ -69,7 +68,7 @@ function QuizContent() {
   useEffect(() => {
     if (!token || !bookId) return;
 
-    fetch(`${API_BASE}/${preview ? "admin" : "student"}/books/${bookId}/questions`, {
+    fetch(`${API_BASE}/student/books/${bookId}/questions`, {
       headers: authHeaders(token),
     })
       .then(r => r.json())
@@ -164,12 +163,11 @@ function QuizContent() {
   async function submitQuiz(finalAnswers: number[]) {
     setPhase("submitting");
     try {
-    const url = `${API_BASE}/${preview ? "admin" : "student"}/books/${bookId}/attempts${preview ? "?preview=true" : ""}`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: authHeaders(token),
-      body: JSON.stringify({ answers: finalAnswers }),
-    });
+      const res = await fetch(`${API_BASE}/student/books/${bookId}/attempts`, {
+        method: "POST",
+        headers: authHeaders(token),
+        body: JSON.stringify({ answers: finalAnswers }),
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "submission failed");
       setResult(data);

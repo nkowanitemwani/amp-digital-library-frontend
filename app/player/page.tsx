@@ -158,17 +158,13 @@ function PlayerContent() {
   const audioUrl = searchParams.get("audioUrl") ? decodeURIComponent(searchParams.get("audioUrl")!) : null;
 
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(audioUrl);
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
   useEffect(() => {
     if (mode !== "dialogue" || !bookId) return;
     const token = localStorage.getItem("amp_token");
     if (!token) return;
 
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    const prefix  = payload.role === "admin" ? "admin" : "student"
-
-    fetch(`${API_BASE}/${prefix}/books/${bookId}/dialogue`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/student/books/${bookId}/dialogue`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.json())

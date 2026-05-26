@@ -26,9 +26,6 @@ import {
   Library,
   LogOut,
   Copy,
-  Book,
-  BookAudio,
-  FileQuestion,
 } from "lucide-react";
 
 // =============================================================
@@ -737,29 +734,21 @@ useEffect(() => {
                               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                                 <StatusBadge status={book.status} />
                                 {book.status === "ready" && book.audio_url && (
-                                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                                    <button
-                                      onClick={() => router.push(`/player?title=${encodeURIComponent(book.title)}&audioUrl=${encodeURIComponent(book.audio_url!)}&mode=standard`)}
-                                      style={{ background: "#EFF6FF", color: "#1D4ED8", border: "1px solid #BFDBFE", borderRadius: 7, padding: "5px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}
-                                      title="lesson"
-                                    >
-                                    <Play size={11}></Play> lesson
-                                    </button>
-                                    <button
-                                      onClick={() => router.push(`/player?title=${encodeURIComponent(book.title)}&bookId=${book.id}&mode=dialogue`)}
-                                      style={{ background: "#F3E8FF", color: "#7C3AED", border: "1px solid #E9D5FF", borderRadius: 7, padding: "5px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}
-                                      title="Discussion"
-                                    >
-                                    <MessageSquare size={11}></MessageSquare> Discussion
-                                    </button>
-                                    <button
-                                      onClick={() => router.push(`/quiz?bookId=${book.id}&title=${encodeURIComponent(book.title)}&preview=true`)}
-                                      style={{ background: "#FFF7ED", color: "#EA580C", border: "1px solid #FED7AA", borderRadius: 7, padding: "5px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer" }}
-                                      title="Quiz"
-                                    >
-                                      <Pencil size={11}></Pencil> Quiz
-                                    </button>
-                                  </div>
+                                  <button
+                                    onClick={() => router.push(
+                                      `/player?title=${encodeURIComponent(book.title)}&audioUrl=${encodeURIComponent(book.audio_url!)}`
+                                    )}
+                                    style={{
+                                      background: "#EFF6FF", color: "#1D4ED8",
+                                      border: "1px solid #BFDBFE", borderRadius: 7,
+                                      padding: "5px 12px", fontSize: 12, fontWeight: 600,
+                                      cursor: "pointer", whiteSpace: "nowrap",
+                                      display: "flex", alignItems: "center", gap: 5,
+                                    }}
+                                    title="Preview audio"
+                                  >
+                                    <Play size={11} /> Preview
+                                  </button>
                                 )}
                                 <button
                                   onClick={() => deleteBook(book)}
