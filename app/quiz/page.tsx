@@ -69,7 +69,7 @@ function QuizContent() {
   useEffect(() => {
     if (!token || !bookId) return;
 
-    fetch(`${API_BASE}/student/books/${bookId}/questions`, {
+    fetch(`${API_BASE}/${preview ? "admin" : "student"}/books/${bookId}/questions`, {
       headers: authHeaders(token),
     })
       .then(r => r.json())
@@ -164,7 +164,7 @@ function QuizContent() {
   async function submitQuiz(finalAnswers: number[]) {
     setPhase("submitting");
     try {
-    const url = `${API_BASE}/student/books/${bookId}/attempts${preview ? "?preview=true" : ""}`;
+    const url = `${API_BASE}/${preview ? "admin" : "student"}/books/${bookId}/attempts${preview ? "?preview=true" : ""}`;
     const res = await fetch(url, {
       method: "POST",
       headers: authHeaders(token),
